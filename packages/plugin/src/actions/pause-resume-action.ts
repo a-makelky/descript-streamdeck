@@ -3,7 +3,7 @@ import type { HelperStatus } from "@descript-streamdeck/shared";
 import { presentPauseResume } from "../state/presentation.js";
 import { RecorderAction } from "./recorder-action.js";
 
-@action({ UUID: "com.descript.streamdeck.pauseResume" })
+@action({ UUID: "com.descript.streamdeck.pauseresume" })
 export class PauseResumeAction extends RecorderAction {
   protected readonly commandName = "pauseResume" as const;
 
@@ -11,4 +11,3 @@ export class PauseResumeAction extends RecorderAction {
     return presentPauseResume(status);
   }
 }
-

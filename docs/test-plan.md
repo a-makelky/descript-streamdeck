@@ -241,10 +241,11 @@ Current call:
 - `Build gate`: go
 - `Packaging gate`: go
 - `Install gate`: go
-- `Permission gate`: partially ready, but still blocked by missing Accessibility access on this machine
-- `Screen Recorder gate`: not yet release-ready
+- `Permission gate`: go
+- `Screen Recorder controls`: one live Stream Deck hardware validation passed for both `Pause / Resume` and `Stop`
+- `Screen Recorder gate`: improved, but still not release-ready until the `10-attempt` drill passes
 - `Editor Recorder gate`: definitely not release-ready yet
 
 In plain English:
 
-The foundation is strong enough to keep building on, but the product is not yet ready to promise reliability to Descript users until we complete live UI validation with Accessibility enabled.
+The core buttons are now working on the actual Stream Deck against a live Descript session, which is the first real on-field proof. But we still should not promise broad reliability to Descript users until those same controls survive the full `10-attempt` repetition test.

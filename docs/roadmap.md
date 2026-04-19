@@ -75,8 +75,9 @@ Definition of done:
 
 ## Immediate Next Work
 
-- keep `Pause / Resume` and `Stop` on the public-beta lane
+- keep `Pause / Resume` and `Stop` on the public-beta lane now that they have first live Stream Deck validation
 - keep `Record` out of the packaged action list until it clears the reliability gate
-- continue isolating a stable `Record` launch path from the normal editor state
 - run the 10-attempt drill for active-session controls inside the packaged `.sdPlugin`
+- package and publish a cleaner beta artifact plus install notes for testers
+- continue isolating a stable `Record` launch path from the normal editor state
 - decide whether `Record` should stay experimental for the first community release

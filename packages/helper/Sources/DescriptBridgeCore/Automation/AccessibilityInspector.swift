@@ -29,8 +29,15 @@ private struct MatchedElement {
     let depth: Int
 }
 
+private struct FramedElement {
+    let element: AXUIElement
+    let role: String
+    let label: String?
+    let frame: CGRect
+}
+
 final class AccessibilityInspector {
-    private let maxDepth = 20
+    private let maxDepth = 30
     private let maxInterestingElements = 80
 
     func isTrusted() -> Bool {
@@ -107,6 +114,235 @@ final class AccessibilityInspector {
             method: .click,
             preference: preference
         )
+    }
+
+    func clickSiblingBeforeElement(
+        matching labels: [String],
+        roles: Set<String>,
+        pid: pid_t,
+        siblingRoles: Set<String> = [kAXButtonRole as String],
+        method: ActivationMethod = .click
+    ) -> Bool {
+        let normalizedLabels = Set(labels.map(normalize))
+        let appElement = AXUIElementCreateApplication(pid)
+        guard let windows = copyAttribute(
+            appElement,
+            attribute: kAXWindowsAttribute as String
+        ) as? [AXUIElement] else {
+            return false
+        }
+
+        for window in windows {
+            guard let match = findSiblingBeforeMatch(
+                in: window,
+                labels: normalizedLabels,
+                roles: roles,
+                siblingRoles: siblingRoles,
+                depth: 0
+            ) else {
+                continue
+            }
+
+            switch method {
+            case .press:
+                return AXUIElementPerformAction(
+                    match.element,
+                    kAXPressAction as CFString
+                ) == .success
+            case .click:
+                return clickElement(match.element)
+            }
+        }
+
+        return false
+    }
+
+    func clickInteractiveElementBetween(
+        leftLabels: [String],
+        rightLabels: [String],
+        pid: pid_t,
+        allowedRoles: Set<String> = [kAXButtonRole as String, kAXPopUpButtonRole as String]
+    ) -> Bool {
+        let appElement = AXUIElementCreateApplication(pid)
+        guard let windows = copyAttribute(
+            appElement,
+            attribute: kAXWindowsAttribute as String
+        ) as? [AXUIElement] else {
+            return false
+        }
+
+        let normalizedLeftLabels = Set(leftLabels.map(normalize))
+        let normalizedRightLabels = Set(rightLabels.map(normalize))
+
+        var interactiveElements: [FramedElement] = []
+        for window in windows {
+            collectFramedElements(
+                from: window,
+                allowedRoles: allowedRoles,
+                depth: 0,
+                into: &interactiveElements
+            )
+        }
+
+        guard
+            let left = interactiveElements.first(where: {
+                guard let label = $0.label else { return false }
+                return normalizedLeftLabels.contains(normalize(label))
+            }),
+            let right = interactiveElements.first(where: {
+                guard let label = $0.label else { return false }
+                return normalizedRightLabels.contains(normalize(label))
+            })
+        else {
+            return false
+        }
+
+        let minX = min(left.frame.maxX, right.frame.maxX)
+        let maxX = max(left.frame.minX, right.frame.minX)
+        let referenceY = (left.frame.midY + right.frame.midY) / 2
+
+        let candidates = interactiveElements.filter { candidate in
+            let centerX = candidate.frame.midX
+            let centerY = candidate.frame.midY
+            let normalizedLabel = candidate.label.map(normalize)
+            let isKnownAnchor = normalizedLabel.map {
+                normalizedLeftLabels.contains($0) || normalizedRightLabels.contains($0)
+            } ?? false
+
+            return !isKnownAnchor
+                && centerX > minX
+                && centerX < maxX
+                && abs(centerY - referenceY) <= 24
+        }
+
+        guard let target = candidates.sorted(by: {
+            abs($0.frame.midX - ((left.frame.midX + right.frame.midX) / 2))
+                < abs($1.frame.midX - ((left.frame.midX + right.frame.midX) / 2))
+        }).first else {
+            return false
+        }
+
+        return clickElement(target.element)
+    }
+
+    func clickRecorderTimerButton(pid: pid_t) -> Bool {
+        let appElement = AXUIElementCreateApplication(pid)
+        guard let windows = copyAttribute(
+            appElement,
+            attribute: kAXWindowsAttribute as String
+        ) as? [AXUIElement] else {
+            return false
+        }
+
+        for window in windows {
+            var controls: [FramedElement] = []
+            collectFramedElements(
+                from: window,
+                allowedRoles: [kAXButtonRole as String, kAXPopUpButtonRole as String],
+                depth: 0,
+                into: &controls
+            )
+
+            let recorderAnchors = controls.filter { control in
+                guard let label = control.label else {
+                    return false
+                }
+
+                return recorderAnchorLabels.contains(normalize(label))
+            }
+
+            guard let recorderRowMidY = recorderAnchors.map(\.frame.midY).max() else {
+                continue
+            }
+
+            let recorderRow = controls.filter {
+                abs($0.frame.midY - recorderRowMidY) <= 16
+            }
+
+            let recorderButtons = recorderRow.filter {
+                $0.role == kAXButtonRole as String
+            }
+
+            let knownActionRightEdge = recorderButtons
+                .filter { button in
+                    guard let label = button.label else {
+                        return false
+                    }
+
+                    return recorderActionLabels.contains(normalize(label))
+                }
+                .map(\.frame.maxX)
+                .max() ?? recorderRow.map(\.frame.minX).min() ?? 0
+
+            let teleprompterLeftEdge = recorderRow
+                .filter { control in
+                    guard let label = control.label else {
+                        return false
+                    }
+
+                    return normalize(label) == "teleprompter"
+                }
+                .map(\.frame.minX)
+                .min()
+
+            let settingsLeftEdge = recorderRow
+                .filter { control in
+                    guard let label = control.label else {
+                        return false
+                    }
+
+                    return normalize(label) == "recorder settings"
+                }
+                .map(\.frame.minX)
+                .min()
+
+            let rightBoundary = teleprompterLeftEdge ?? settingsLeftEdge ?? .greatestFiniteMagnitude
+
+            let timerButtons = recorderButtons.filter { button in
+                guard let label = button.label else {
+                    return false
+                }
+
+                return isRecorderTimerLabel(label)
+                    && button.frame.minX >= knownActionRightEdge - 8
+                    && button.frame.maxX <= rightBoundary + 8
+                    && button.frame.width >= 48
+                    && button.frame.height >= 24
+            }
+
+            if let target = timerButtons.max(by: {
+                if $0.frame.width == $1.frame.width {
+                    return $0.frame.maxX < $1.frame.maxX
+                }
+                return $0.frame.width < $1.frame.width
+            }) {
+                return clickElement(target.element)
+            }
+
+            let fallbackButtons = recorderButtons.filter { button in
+                let normalizedLabel = button.label.map(normalize)
+                let isKnownControl = normalizedLabel.map {
+                    recorderAnchorLabels.contains($0)
+                } ?? false
+
+                return !isKnownControl
+                    && button.frame.minX >= knownActionRightEdge - 8
+                    && button.frame.maxX <= rightBoundary + 8
+                    && button.frame.width >= 48
+                    && button.frame.height >= 24
+            }
+
+            if let target = fallbackButtons.max(by: {
+                if $0.frame.width == $1.frame.width {
+                    return $0.frame.maxX < $1.frame.maxX
+                }
+                return $0.frame.width < $1.frame.width
+            }) {
+                return clickElement(target.element)
+            }
+        }
+
+        return false
     }
 
     func containsElement(
@@ -296,6 +532,97 @@ final class AccessibilityInspector {
         }
     }
 
+    private func findSiblingBeforeMatch(
+        in element: AXUIElement,
+        labels: Set<String>,
+        roles: Set<String>,
+        siblingRoles: Set<String>,
+        depth: Int
+    ) -> MatchedElement? {
+        guard depth <= maxDepth else {
+            return nil
+        }
+
+        if let children = copyAttribute(
+            element,
+            attribute: kAXChildrenAttribute as String
+        ) as? [AXUIElement] {
+            for (index, child) in children.enumerated() {
+                if let role = copyAttribute(child, attribute: kAXRoleAttribute as String) as? String,
+                   roles.contains(role),
+                   let label = firstInterestingLabel(for: child),
+                   labels.contains(normalize(label))
+                {
+                    for siblingIndex in stride(from: index - 1, through: 0, by: -1) {
+                        let sibling = children[siblingIndex]
+                        guard let siblingRole = copyAttribute(
+                            sibling,
+                            attribute: kAXRoleAttribute as String
+                        ) as? String,
+                        siblingRoles.contains(siblingRole) else {
+                            continue
+                        }
+
+                        return MatchedElement(
+                            element: sibling,
+                            depth: depth + 1
+                        )
+                    }
+                }
+            }
+
+            for child in children {
+                if let match = findSiblingBeforeMatch(
+                    in: child,
+                    labels: labels,
+                    roles: roles,
+                    siblingRoles: siblingRoles,
+                    depth: depth + 1
+                ) {
+                    return match
+                }
+            }
+        }
+
+        return nil
+    }
+
+    private func collectFramedElements(
+        from element: AXUIElement,
+        allowedRoles: Set<String>,
+        depth: Int,
+        into elements: inout [FramedElement]
+    ) {
+        guard depth <= maxDepth else {
+            return
+        }
+
+        if let role = copyAttribute(element, attribute: kAXRoleAttribute as String) as? String,
+           allowedRoles.contains(role),
+           let frame = frame(for: element)
+        {
+            elements.append(
+                FramedElement(
+                    element: element,
+                    role: role,
+                    label: firstInterestingLabel(for: element),
+                    frame: frame
+                )
+            )
+        }
+
+        if let children = copyAttribute(element, attribute: kAXChildrenAttribute as String) as? [AXUIElement] {
+            for child in children {
+                collectFramedElements(
+                    from: child,
+                    allowedRoles: allowedRoles,
+                    depth: depth + 1,
+                    into: &elements
+                )
+            }
+        }
+    }
+
     private func firstNonEmptyLabel(for element: AXUIElement) -> String? {
         let candidates = [
             copyAttribute(element, attribute: kAXTitleAttribute as String) as? String,
@@ -329,9 +656,28 @@ final class AccessibilityInspector {
 
     private let interestingControlRoles: Set<String> = [
         kAXButtonRole as String,
+        kAXCheckBoxRole as String,
+        kAXGroupRole as String,
+        kAXMenuItemRole as String,
         kAXPopUpButtonRole as String,
         kAXMenuButtonRole as String
     ]
+
+    private let recorderActionLabels: Set<String> = [
+        "cancel recording",
+        "restart recording",
+        "pause",
+        "pause recording",
+        "resume",
+        "resume recording"
+    ]
+
+    private lazy var recorderAnchorLabels: Set<String> = {
+        recorderActionLabels.union([
+            "teleprompter",
+            "recorder settings"
+        ])
+    }()
 
     private func copyAttribute(
         _ element: AXUIElement,
@@ -352,18 +698,27 @@ final class AccessibilityInspector {
     }
 
     private func clickElement(_ element: AXUIElement) -> Bool {
-        guard let position = point(from: copyAttribute(element, attribute: kAXPositionAttribute as String)),
-              let size = size(from: copyAttribute(element, attribute: kAXSizeAttribute as String))
+        guard let frame = frame(for: element)
         else {
             return false
         }
 
         let center = CGPoint(
-            x: position.x + (size.width / 2),
-            y: position.y + (size.height / 2)
+            x: frame.midX,
+            y: frame.midY
         )
 
         return postMouseClick(at: center)
+    }
+
+    private func frame(for element: AXUIElement) -> CGRect? {
+        guard let position = point(from: copyAttribute(element, attribute: kAXPositionAttribute as String)),
+              let size = size(from: copyAttribute(element, attribute: kAXSizeAttribute as String))
+        else {
+            return nil
+        }
+
+        return CGRect(origin: position, size: size)
     }
 
     private func point(from value: CFTypeRef?) -> CGPoint? {
@@ -430,5 +785,18 @@ final class AccessibilityInspector {
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased()
             .replacingOccurrences(of: "…", with: "")
+    }
+
+    private func isRecorderTimerLabel(_ value: String) -> Bool {
+        let normalizedValue = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        let components = normalizedValue.split(separator: ":")
+
+        guard components.count == 2 || components.count == 3 else {
+            return false
+        }
+
+        return components.allSatisfy { component in
+            component.count == 2 && component.allSatisfy(\.isNumber)
+        }
     }
 }

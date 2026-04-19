@@ -6,6 +6,8 @@ import {
   type WillAppearEvent,
   type WillDisappearEvent
 } from "@elgato/streamdeck";
+import { appendFileSync, mkdirSync } from "node:fs";
+import { resolve } from "node:path";
 import streamDeck from "@elgato/streamdeck";
 import type { ActionSettings, HelperStatus } from "@descript-streamdeck/shared";
 import { mergeSettings } from "@descript-streamdeck/shared";
@@ -18,6 +20,21 @@ type VisibleContext = {
   action: KeyAction<ActionSettings>;
   settings: ActionSettings;
 };
+
+const runtimeLogPath = resolve(__dirname, "../../logs/runtime-events.jsonl");
+
+function writeRuntimeEvent(event: Record<string, unknown>): void {
+  try {
+    mkdirSync(resolve(__dirname, "../../logs"), { recursive: true });
+    appendFileSync(
+      runtimeLogPath,
+      `${JSON.stringify({ at: new Date().toISOString(), ...event })}\n`,
+      "utf8"
+    );
+  } catch {
+    // Runtime diagnostics must never break the action flow.
+  }
+}
 
 export abstract class RecorderAction extends SingletonAction<ActionSettings> {
   private readonly contexts = new Map<string, VisibleContext>();
@@ -47,6 +64,25 @@ export abstract class RecorderAction extends SingletonAction<ActionSettings> {
 
     try {
       const result = await helperProcess.runCommand(this.commandName, settings);
+      let debugSnapshot: unknown;
+      if (!result.ok || this.commandName !== "record") {
+        try {
+          debugSnapshot = await helperProcess.debugSnapshot();
+        } catch (debugError) {
+          debugSnapshot = {
+            error: String(debugError)
+          };
+        }
+      }
+
+      writeRuntimeEvent({
+        actionId: ev.action.id,
+        command: this.commandName,
+        settings,
+        result,
+        debugSnapshot
+      });
+
       const detail = result.message ? ` ${result.message}` : "";
       ev.action.setTitle(this.present(result.status).title).catch(() => {});
       streamDeck.logger.info(
@@ -58,6 +94,12 @@ export abstract class RecorderAction extends SingletonAction<ActionSettings> {
         await ev.action.showAlert();
       }
     } catch (error) {
+      writeRuntimeEvent({
+        actionId: ev.action.id,
+        command: this.commandName,
+        settings,
+        error: String(error)
+      });
       streamDeck.logger.error(
         `[descript-streamdeck] ${this.commandName} -> exception: ${String(error)}`
       );

@@ -28,7 +28,7 @@
   "URL": "https://github.com/a-makelky/descript-streamdeck",
   "Actions": [
     {
-      "UUID": "com.descript.streamdeck.pauseResume",
+      "UUID": "com.descript.streamdeck.pauseresume",
       "Name": "Pause / Resume",
       "Tooltip": "Pause or resume the active Descript recorder.",
       "Icon": "assets/actions/pause",

@@ -232,10 +232,11 @@ final class DescriptController {
             ? ["Resume", "Resume recording", "Resume Recording"]
             : ["Pause", "Pause recording", "Pause Recording", "Resume"]
 
-        let pressed = inspector.clickFirstButton(
+        let pressed = inspector.clickFirstControl(
             matching: labels,
             pid: app.processIdentifier,
-            method: .click
+            method: .click,
+            preference: .deepest
         )
         let afterStatus = waitForRecorderStateChange(
             from: beforeStatus.recorderState,
@@ -273,7 +274,8 @@ final class DescriptController {
             Thread.sleep(forTimeInterval: 0.2)
         }
 
-        let pressed = inspector.clickFirstButton(
+        let pressed =
+            inspector.clickFirstControl(
             matching: [
                 "Stop",
                 "Stop recording",
@@ -281,7 +283,20 @@ final class DescriptController {
                 "Finish"
             ],
             pid: app.processIdentifier,
-            method: .click
+            method: .click,
+            preference: .deepest
+        ) || inspector.clickRecorderTimerButton(
+            pid: app.processIdentifier
+        ) || inspector.clickInteractiveElementBetween(
+            leftLabels: [
+                "Pause",
+                "Pause Recording",
+                "Resume",
+                "Resume Recording",
+                "Restart recording"
+            ],
+            rightLabels: ["Teleprompter", "Recorder settings"],
+            pid: app.processIdentifier
         )
         let afterStatus = waitForStatus(options: options, timeout: 3.0)
         let stopped = afterStatus.recorderState == .idle
@@ -399,6 +414,11 @@ final class DescriptController {
                 progressed = selectScreenRecorderMenuItem(pid: pid) || progressed
                 Thread.sleep(forTimeInterval: 0.5)
             }
+
+            if screenRecorderInsertionMenuIsVisible(pid: pid) {
+                progressed = selectScreenRecorderInsertionTarget(pid: pid) || progressed
+                Thread.sleep(forTimeInterval: 0.5)
+            }
         }
 
         if screenRecorderControlsAreVisible(pid: pid) {
@@ -476,6 +496,38 @@ final class DescriptController {
         )
     }
 
+    private func screenRecorderInsertionMenuIsVisible(pid: pid_t) -> Bool {
+        inspector.containsElement(
+            matching: [
+                "Insert into script This recording will be transcribed and added to your script",
+                "New layer This recording will be added on top of your current scene"
+            ],
+            roles: [menuItemRole],
+            pid: pid
+        )
+    }
+
+    private func selectScreenRecorderInsertionTarget(pid: pid_t) -> Bool {
+        if inspector.focusFirstElement(
+            matching: ["Insert into script This recording will be transcribed and added to your script"],
+            roles: [menuItemRole],
+            pid: pid
+        ) {
+            do {
+                try shortcutSynthesizer.send("return")
+                return true
+            } catch {
+                return false
+            }
+        }
+
+        return inspector.clickFirstElement(
+            matching: ["Insert into script This recording will be transcribed and added to your script"],
+            roles: [menuItemRole],
+            pid: pid
+        )
+    }
+
     private func waitForStatus(
         options: CommandOptions,
         timeout: TimeInterval,
@@ -514,15 +566,28 @@ final class DescriptController {
     }
 
     private func inferState(from snapshots: [AccessibilityWindowSnapshot]) -> RecorderState {
+        let controlLabels = snapshots
+            .flatMap(\.elements)
+            .filter { recorderSignalRoles.contains($0.role) }
+            .map(\.label)
+            .map(normalize)
+
         let buttonNames = snapshots
             .flatMap(\.buttons)
             .map(normalize)
 
-        if buttonNames.contains(where: { $0.contains("resume") }) {
+        let signalLabels = controlLabels + buttonNames
+
+        if signalLabels.contains(where: { $0 == "resume" || $0.contains("resume recording") }) {
             return .paused
         }
 
-        if buttonNames.contains(where: { $0.contains("pause") || $0.contains("stop") }) {
+        if signalLabels.contains(where: {
+            $0 == "pause"
+                || $0 == "stop"
+                || $0.contains("pause recording")
+                || $0.contains("stop recording")
+        }) {
             return .recording
         }
 
@@ -622,6 +687,13 @@ final class DescriptController {
     }
 
     private let menuItemRole = "AXMenuItem"
+    private let recorderSignalRoles: Set<String> = [
+        "AXButton",
+        "AXCheckBox",
+        "AXGroup",
+        "AXMenuButton",
+        "AXPopUpButton"
+    ]
     private let screenRecorderTriggerRoles: Set<String> = [
         "AXButton",
         "AXStaticText",
