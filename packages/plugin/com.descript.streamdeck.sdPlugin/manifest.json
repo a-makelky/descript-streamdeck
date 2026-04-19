@@ -1,0 +1,65 @@
+{
+  "Name": "Descript Recorder",
+  "Description": "Control Descript recording from Stream Deck with a bundled macOS helper.",
+  "Version": "0.1.0",
+  "Author": "Aaron Makelky",
+  "CodePath": "dist/bin/plugin.js",
+  "Nodejs": {
+    "Version": "20"
+  },
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.7"
+  },
+  "ApplicationsToMonitor": {
+    "mac": [
+      "com.descript.beachcube"
+    ]
+  },
+  "OS": [
+    {
+      "Platform": "mac",
+      "MinimumVersion": "13.0"
+    }
+  ],
+  "Category": "Descript",
+  "CategoryIcon": "assets/actions/category",
+  "Icon": "assets/plugin-icon",
+  "URL": "https://github.com/a-makelky/descript-streamdeck",
+  "Actions": [
+    {
+      "UUID": "com.descript.streamdeck.pauseResume",
+      "Name": "Pause / Resume",
+      "Tooltip": "Pause or resume the active Descript recorder.",
+      "Icon": "assets/actions/pause",
+      "States": [
+        {
+          "Image": "assets/keys/pause",
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "assets/keys/resume",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "PropertyInspectorPath": "ui/settings.html",
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true
+    },
+    {
+      "UUID": "com.descript.streamdeck.stop",
+      "Name": "Stop",
+      "Tooltip": "Stop the active Descript recorder.",
+      "Icon": "assets/actions/stop",
+      "States": [
+        {
+          "Image": "assets/keys/stop",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "PropertyInspectorPath": "ui/settings.html",
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true
+    }
+  ]
+}

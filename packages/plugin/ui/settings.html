@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Descript Recorder Settings</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      body {
+        background: #111318;
+        color: #f4f6fb;
+        margin: 0;
+        padding: 18px;
+      }
+
+      form {
+        display: grid;
+        gap: 14px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 13px;
+      }
+
+      select,
+      input[type="text"] {
+        background: #1a1f29;
+        border: 1px solid #2e3544;
+        border-radius: 10px;
+        color: inherit;
+        font: inherit;
+        padding: 10px 12px;
+      }
+
+      .toggle {
+        align-items: center;
+        display: grid;
+        gap: 10px;
+        grid-template-columns: auto 1fr;
+      }
+
+      .hint {
+        color: #aeb7c7;
+        font-size: 12px;
+        line-height: 1.4;
+        margin: 0;
+      }
+
+      .stack {
+        display: grid;
+        gap: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <form id="settings-form">
+      <label>
+        Preferred recorder
+        <select name="preferredRecorder">
+          <option value="auto">Auto detect</option>
+          <option value="screen">Screen Recorder</option>
+          <option value="editor">Editor Recorder</option>
+        </select>
+      </label>
+
+      <div class="stack">
+        <label class="toggle">
+          <input type="checkbox" name="bringDescriptToFront" />
+          <span>Bring Descript to front</span>
+        </label>
+
+        <label class="toggle">
+          <input type="checkbox" name="allowHotkeyFallback" />
+          <span>Allow shortcut fallback</span>
+        </label>
+
+        <label class="toggle">
+          <input type="checkbox" name="openPermissionsIfNeeded" />
+          <span>Open Accessibility settings when blocked</span>
+        </label>
+      </div>
+
+      <label>
+        Screen Recorder shortcut
+        <input
+          type="text"
+          name="screenRecorderShortcut"
+          placeholder="cmd+shift+2"
+          spellcheck="false"
+        />
+      </label>
+
+      <p class="hint">
+        The plugin uses a bundled macOS helper. Screen Recorder can fall back to
+        a shortcut; pause, resume, and stop rely on Accessibility access for
+        reliability.
+      </p>
+    </form>
+
+    <script src="./settings.js"></script>
+  </body>
+</html>
+

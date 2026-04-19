@@ -1,0 +1,15 @@
+{
+  "name": "@descript-streamdeck/plugin",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./com.descript.streamdeck.sdPlugin/dist/bin/plugin.js",
+  "scripts": {
+    "build": "tsup src/plugin.ts --format cjs --platform node --target node20 --clean --out-dir com.descript.streamdeck.sdPlugin/dist/bin && node ../../scripts/sync-plugin-static.mjs",
+    "dev": "tsup src/plugin.ts --format cjs --platform node --target node20 --watch --out-dir com.descript.streamdeck.sdPlugin/dist/bin",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@descript-streamdeck/shared": "file:../shared",
+    "@elgato/streamdeck": "^2.1.0"
+  }
+}

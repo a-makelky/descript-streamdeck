@@ -1,0 +1,21 @@
+{
+  "name": "@descript-streamdeck/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/protocol.d.ts",
+      "import": "./dist/protocol.js",
+      "require": "./dist/protocol.cjs"
+    }
+  },
+  "main": "./dist/protocol.cjs",
+  "module": "./dist/protocol.js",
+  "types": "./dist/protocol.d.ts",
+  "scripts": {
+    "build": "tsup src/protocol.ts --format esm,cjs --dts --clean --out-dir dist",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}
+

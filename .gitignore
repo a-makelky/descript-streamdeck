@@ -1,0 +1,10 @@
+node_modules
+dist
+artifacts
+.DS_Store
+.swiftpm
+.build
+Package.resolved
+*.log
+packages/plugin/com.descript.streamdeck.sdPlugin/bin
+packages/plugin/com.descript.streamdeck.sdPlugin/logs
