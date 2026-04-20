@@ -242,10 +242,11 @@ Current call:
 - `Packaging gate`: go
 - `Install gate`: go
 - `Permission gate`: go
-- `Screen Recorder controls`: one live Stream Deck hardware validation passed for both `Pause / Resume` and `Stop`
+- `Standard recorder controls`: first live Stream Deck hardware validation passed for both `Pause / Resume` and `Stop`
+- `Screen Recorder controls`: first live Stream Deck hardware validation passed for both `Pause / Resume` and `Stop`
 - `Screen Recorder gate`: improved, but still not release-ready until the `10-attempt` drill passes
 - `Editor Recorder gate`: definitely not release-ready yet
 
 In plain English:
 
-The core buttons are now working on the actual Stream Deck against a live Descript session, which is the first real on-field proof. But we still should not promise broad reliability to Descript users until those same controls survive the full `10-attempt` repetition test.
+The core buttons are now working on the actual Stream Deck against both Descript recorder surfaces we have tested, which is the first real on-field proof across more than one formation. But we still should not promise broad reliability to Descript users until those same controls survive the full `10-attempt` repetition test.

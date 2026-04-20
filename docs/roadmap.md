@@ -76,6 +76,7 @@ Definition of done:
 ## Immediate Next Work
 
 - keep `Pause / Resume` and `Stop` on the public-beta lane now that they have first live Stream Deck validation
+- keep hardening the dedicated screen-recording control window path alongside the in-editor recorder path
 - keep `Record` out of the packaged action list until it clears the reliability gate
 - run the 10-attempt drill for active-session controls inside the packaged `.sdPlugin`
 - package and publish a cleaner beta artifact plus install notes for testers

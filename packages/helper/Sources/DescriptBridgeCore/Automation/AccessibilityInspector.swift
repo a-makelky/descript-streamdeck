@@ -75,14 +75,16 @@ final class AccessibilityInspector {
         matching labels: [String],
         pid: pid_t,
         method: ActivationMethod = .press,
-        preference: MatchPreference = .first
+        preference: MatchPreference = .first,
+        preferredWindowTitles: [String] = []
     ) -> Bool {
         activateFirstElement(
             matching: labels,
             roles: [kAXButtonRole as String],
             pid: pid,
             method: method,
-            preference: preference
+            preference: preference,
+            preferredWindowTitles: preferredWindowTitles
         )
     }
 
@@ -90,14 +92,16 @@ final class AccessibilityInspector {
         matching labels: [String],
         pid: pid_t,
         method: ActivationMethod = .press,
-        preference: MatchPreference = .first
+        preference: MatchPreference = .first,
+        preferredWindowTitles: [String] = []
     ) -> Bool {
         activateFirstElement(
             matching: labels,
             roles: interestingControlRoles,
             pid: pid,
             method: method,
-            preference: preference
+            preference: preference,
+            preferredWindowTitles: preferredWindowTitles
         )
     }
 
@@ -105,14 +109,16 @@ final class AccessibilityInspector {
         matching labels: [String],
         roles: Set<String>,
         pid: pid_t,
-        preference: MatchPreference = .first
+        preference: MatchPreference = .first,
+        preferredWindowTitles: [String] = []
     ) -> Bool {
         activateFirstElement(
             matching: labels,
             roles: roles,
             pid: pid,
             method: .click,
-            preference: preference
+            preference: preference,
+            preferredWindowTitles: preferredWindowTitles
         )
     }
 
@@ -348,13 +354,15 @@ final class AccessibilityInspector {
     func containsElement(
         matching labels: [String],
         roles: Set<String>,
-        pid: pid_t
+        pid: pid_t,
+        preferredWindowTitles: [String] = []
     ) -> Bool {
         findMatchingElement(
             matching: labels,
             roles: roles,
             pid: pid,
-            preference: .first
+            preference: .first,
+            preferredWindowTitles: preferredWindowTitles
         ) != nil
     }
 
@@ -362,13 +370,15 @@ final class AccessibilityInspector {
         matching labels: [String],
         roles: Set<String>,
         pid: pid_t,
-        preference: MatchPreference = .first
+        preference: MatchPreference = .first,
+        preferredWindowTitles: [String] = []
     ) -> Bool {
         guard let match = findMatchingElement(
             matching: labels,
             roles: roles,
             pid: pid,
-            preference: preference
+            preference: preference,
+            preferredWindowTitles: preferredWindowTitles
         ) else {
             return false
         }
@@ -444,13 +454,15 @@ final class AccessibilityInspector {
         roles: Set<String>,
         pid: pid_t,
         method: ActivationMethod,
-        preference: MatchPreference
+        preference: MatchPreference,
+        preferredWindowTitles: [String]
     ) -> Bool {
         guard let match = findMatchingElement(
             matching: labels,
             roles: roles,
             pid: pid,
-            preference: preference
+            preference: preference,
+            preferredWindowTitles: preferredWindowTitles
         ) else {
             return false
         }
@@ -470,9 +482,11 @@ final class AccessibilityInspector {
         matching labels: [String],
         roles: Set<String>,
         pid: pid_t,
-        preference: MatchPreference
+        preference: MatchPreference,
+        preferredWindowTitles: [String]
     ) -> MatchedElement? {
         let normalizedLabels = Set(labels.map(normalize))
+        let normalizedPreferredTitles = Set(preferredWindowTitles.map(normalize))
         let appElement = AXUIElementCreateApplication(pid)
         guard let windows = copyAttribute(
             appElement,
@@ -482,7 +496,24 @@ final class AccessibilityInspector {
         }
 
         var matches: [MatchedElement] = []
-        for window in windows {
+        let orderedWindows = windows.sorted { left, right in
+            let leftTitle = normalize(
+                (copyAttribute(left, attribute: kAXTitleAttribute as String) as? String) ?? ""
+            )
+            let rightTitle = normalize(
+                (copyAttribute(right, attribute: kAXTitleAttribute as String) as? String) ?? ""
+            )
+            let leftPreferred = normalizedPreferredTitles.contains(leftTitle)
+            let rightPreferred = normalizedPreferredTitles.contains(rightTitle)
+
+            if leftPreferred != rightPreferred {
+                return leftPreferred && !rightPreferred
+            }
+
+            return false
+        }
+
+        for window in orderedWindows {
             collectMatches(
                 from: window,
                 labels: normalizedLabels,

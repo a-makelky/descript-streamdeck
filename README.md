@@ -18,7 +18,7 @@ This repo already ships a working first foundation:
 
 This is the honest state of the project right now:
 
-- `Pause / Resume` and `Stop` are the strongest controls today. They now have live Stream Deck hardware validation against an active Descript Screen Recorder session when macOS Accessibility is granted.
+- `Pause / Resume` and `Stop` are the strongest controls today. They now have live Stream Deck hardware validation against both the standard in-project recorder controls and the dedicated Descript screen-recording control surface when macOS Accessibility is granted.
 - `Record` is still experimental. The code path stays in the repo for further work, but it is not part of the current packaged public-beta action set because it is not yet reliable from a normal in-project editor window.
 - `Pause / Resume` and `Stop` require macOS Accessibility permission because they rely on UI inspection and button presses inside Descript.
 - `Editor Recorder` support is scaffolded and partially implemented through UI-button discovery, but it still needs a real UI capture pass to make it release-grade across app states.

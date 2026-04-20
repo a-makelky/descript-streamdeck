@@ -232,17 +232,55 @@ final class DescriptController {
             ? ["Resume", "Resume recording", "Resume Recording"]
             : ["Pause", "Pause recording", "Pause Recording", "Resume"]
 
-        let pressed = inspector.clickFirstControl(
-            matching: labels,
-            pid: app.processIdentifier,
-            method: .click,
-            preference: .deepest
-        )
-        let afterStatus = waitForRecorderStateChange(
-            from: beforeStatus.recorderState,
-            options: options,
-            timeout: 2.0
-        )
+        var pressed = false
+        var afterStatus = beforeStatus
+
+        let attempts: [() -> Bool] = [
+            {
+                self.inspector.clickFirstButton(
+                    matching: labels,
+                    pid: app.processIdentifier,
+                    method: .click,
+                    preference: .first,
+                    preferredWindowTitles: ["Descript"]
+                )
+            },
+            {
+                self.inspector.clickFirstButton(
+                    matching: labels,
+                    pid: app.processIdentifier,
+                    method: .press,
+                    preference: .first,
+                    preferredWindowTitles: ["Descript"]
+                )
+            },
+            {
+                self.inspector.clickFirstControl(
+                    matching: labels,
+                    pid: app.processIdentifier,
+                    method: .click,
+                    preference: .deepest
+                )
+            }
+        ]
+
+        for attempt in attempts {
+            guard attempt() else {
+                continue
+            }
+
+            pressed = true
+            afterStatus = waitForRecorderStateChange(
+                from: beforeStatus.recorderState,
+                options: options,
+                timeout: 1.0
+            )
+
+            if afterStatus.recorderState != beforeStatus.recorderState {
+                break
+            }
+        }
+
         let changedState = afterStatus.recorderState != beforeStatus.recorderState
 
         return CommandOutcome(
@@ -274,31 +312,74 @@ final class DescriptController {
             Thread.sleep(forTimeInterval: 0.2)
         }
 
-        let pressed =
-            inspector.clickFirstControl(
-            matching: [
-                "Stop",
-                "Stop recording",
-                "Stop Recording",
-                "Finish"
-            ],
-            pid: app.processIdentifier,
-            method: .click,
-            preference: .deepest
-        ) || inspector.clickRecorderTimerButton(
-            pid: app.processIdentifier
-        ) || inspector.clickInteractiveElementBetween(
-            leftLabels: [
-                "Pause",
-                "Pause Recording",
-                "Resume",
-                "Resume Recording",
-                "Restart recording"
-            ],
-            rightLabels: ["Teleprompter", "Recorder settings"],
-            pid: app.processIdentifier
-        )
-        let afterStatus = waitForStatus(options: options, timeout: 3.0)
+        let stopLabels = [
+            "Stop",
+            "Stop recording",
+            "Stop Recording",
+            "Finish"
+        ]
+        var pressed = false
+        var afterStatus = currentStatus(options: options)
+
+        let attempts: [() -> Bool] = [
+            {
+                self.inspector.clickFirstButton(
+                    matching: stopLabels,
+                    pid: app.processIdentifier,
+                    method: .click,
+                    preference: .first,
+                    preferredWindowTitles: ["Descript"]
+                )
+            },
+            {
+                self.inspector.clickFirstButton(
+                    matching: stopLabels,
+                    pid: app.processIdentifier,
+                    method: .press,
+                    preference: .first,
+                    preferredWindowTitles: ["Descript"]
+                )
+            },
+            {
+                self.inspector.clickFirstControl(
+                    matching: stopLabels,
+                    pid: app.processIdentifier,
+                    method: .click,
+                    preference: .deepest
+                )
+            },
+            {
+                self.inspector.clickRecorderTimerButton(
+                    pid: app.processIdentifier
+                )
+            },
+            {
+                self.inspector.clickInteractiveElementBetween(
+                    leftLabels: [
+                        "Pause",
+                        "Pause Recording",
+                        "Resume",
+                        "Resume Recording",
+                        "Restart recording"
+                    ],
+                    rightLabels: ["Teleprompter", "Recorder settings"],
+                    pid: app.processIdentifier
+                )
+            }
+        ]
+
+        for attempt in attempts {
+            guard attempt() else {
+                continue
+            }
+
+            pressed = true
+            afterStatus = waitForStatus(options: options, timeout: 1.25)
+            if afterStatus.recorderState == .idle {
+                break
+            }
+        }
+
         let stopped = afterStatus.recorderState == .idle
 
         return CommandOutcome(
@@ -566,13 +647,15 @@ final class DescriptController {
     }
 
     private func inferState(from snapshots: [AccessibilityWindowSnapshot]) -> RecorderState {
-        let controlLabels = snapshots
+        let prioritizedSnapshots = prioritizedStateSnapshots(from: snapshots)
+
+        let controlLabels = prioritizedSnapshots
             .flatMap(\.elements)
             .filter { recorderSignalRoles.contains($0.role) }
             .map(\.label)
             .map(normalize)
 
-        let buttonNames = snapshots
+        let buttonNames = prioritizedSnapshots
             .flatMap(\.buttons)
             .map(normalize)
 
@@ -592,6 +675,32 @@ final class DescriptController {
         }
 
         return .idle
+    }
+
+    private func prioritizedStateSnapshots(
+        from snapshots: [AccessibilityWindowSnapshot]
+    ) -> [AccessibilityWindowSnapshot] {
+        let dedicatedControlWindows = snapshots.filter(isDedicatedRecorderControlWindow)
+        return dedicatedControlWindows.isEmpty ? snapshots : dedicatedControlWindows
+    }
+
+    private func isDedicatedRecorderControlWindow(
+        _ snapshot: AccessibilityWindowSnapshot
+    ) -> Bool {
+        let title = normalize(snapshot.title)
+        guard title == "descript" else {
+            return false
+        }
+
+        let labels = snapshot.buttons.map(normalize)
+            + snapshot.elements.map(\.label).map(normalize)
+
+        return labels.contains(where: { label in
+            label == "pause recording"
+                || label == "resume recording"
+                || label == "stop recording"
+                || label == "restart recording"
+        })
     }
 
     private func inferRecorder(
