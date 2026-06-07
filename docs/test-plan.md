@@ -14,8 +14,7 @@ Scope:
 
 - macOS desktop app only
 - Descript Screen Recorder only
-- `Record`
-- `Stop`
+- one `Record / Stop` key
 
 `Pause / Resume` remains an experimental lane until Descript exposes a stable pause/resume control in the Screen Recorder dock.
 
@@ -82,7 +81,7 @@ Go:
 No-go:
 
 - plugin silently fails when permission is missing
-- user is left guessing why `Record` or `Stop` do nothing
+- user is left guessing why `Record / Stop` does nothing
 - permission recovery requires developer-only steps
 
 ## Functional Gates
@@ -103,8 +102,8 @@ Go:
 
 No-go:
 
-- `Record` or `Stop` succeeds less than 9 out of 10 attempts
-- `Record` or `Stop` require the user to click Descript first in an undocumented way
+- `Record / Stop` succeeds less than 9 out of 10 attempts
+- `Record / Stop` requires the user to click Descript first in an undocumented way
 - key state is misleading often enough that a user would press the wrong control
 - helper buttons depend on labels that drift between windows without a fallback plan
 
@@ -191,7 +190,7 @@ For the next real validation pass, use this order:
 
 1. Run `npm run release:check` to generate the baseline evidence report.
 2. Install the packaged plugin in Stream Deck.
-3. Put `Record` and `Stop` on visible keys.
+3. Put `Record / Stop` on a visible key.
 4. Test with Accessibility denied and confirm blocked-state messaging.
 5. Grant Accessibility to the helper.
 6. Run `npm run release:check -- --skip-build` again to confirm the permission lane turned green and to capture a fresh helper snapshot.
@@ -237,10 +236,10 @@ Current call:
 - `Packaging gate`: go
 - `Install gate`: go as of the June 7, 2026 preflight; Stream Deck launched the plugin and logged a successful connection
 - `Permission gate`: go
-- `Screen Recorder controls`: live helper validation passed for both `Record` and `Stop`
-- `Screen Recorder gate`: go after the June 7, 2026 live `10-attempt` Record + Stop drill passed
+- `Screen Recorder control`: `Record / Stop` key presentation is fixed locally
+- `Screen Recorder gate`: rerun the live `10-attempt` Record / Stop drill in a clean Descript project before refreshing the public beta package
 - `Editor Recorder gate`: definitely not release-ready yet
 
 In plain English:
 
-The beta buttons now match what Descript exposes reliably today. Record starts the Screen Recorder and Stop ends it, and that cycle has survived the full `10-attempt` repetition test.
+The beta key now matches the intended user experience: one button starts the Screen Recorder when idle and stops it when active. The latest repeat drill hit a Descript insertion-point error in the current project, so do not refresh the public beta artifact until a clean-project drill passes again.

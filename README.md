@@ -8,7 +8,7 @@ The project is built around a simple rule: keep the Stream Deck side thin, and p
 
 This repo already ships a working first foundation:
 
-- A Stream Deck plugin with two supported actions: `Record` and `Stop`
+- A Stream Deck plugin with one supported action: `Record / Stop`
 - A bundled Swift helper binary that detects Descript, checks Accessibility permissions, inspects the Descript UI tree, and executes recorder commands
 - A shared JSON protocol between the plugin and helper
 - A property inspector with per-action settings for recorder preference, focus behavior, shortcut fallback, and permission handling
@@ -18,16 +18,15 @@ This repo already ships a working first foundation:
 
 This is the honest state of the project right now:
 
-- `Record` and `Stop` are the supported public-beta controls today. They passed a live 10-attempt Record + Stop drill against Descript Screen Recorder when macOS Accessibility is granted.
+- `Record / Stop` is the intended public-beta control: one key starts the Screen Recorder when idle and stops it when active.
 - `Pause / Resume` stays in the codebase as an experimental lane, but it is not part of the current packaged action set because Descript 2.19.1 does not expose a stable pause/resume control in the current Screen Recorder dock.
-- `Record` and `Stop` require macOS Accessibility permission because they rely on UI inspection and button presses inside Descript.
+- `Record / Stop` requires macOS Accessibility permission because it relies on UI inspection and button presses inside Descript.
 - `Editor Recorder` support is scaffolded and partially implemented through UI-button discovery, but it still needs a real UI capture pass to make it release-grade across app states.
 - The helper includes a `debug` command so we can inspect Descript window/button snapshots and harden selectors instead of guessing.
 
 Current practical release call:
 
-- `Record`: go for public beta
-- `Stop`: go for public beta
+- `Record / Stop`: fixed locally; refresh the public beta package after a clean-project 10-attempt drill passes
 - overall public beta: go
 
 ## Tested Baseline
@@ -105,7 +104,7 @@ Then restart Stream Deck or use the plugin reload flow in the app.
 
 There are two permission realities on macOS:
 
-- `Record` and `Stop` need Accessibility so the helper can find and press Descript UI controls.
+- `Record / Stop` needs Accessibility so the helper can find and press Descript UI controls.
 - `Pause / Resume` is not exposed in the packaged beta until Descript exposes a stable pause/resume control again.
 
 If the helper is blocked, the plugin can open the Accessibility settings pane for the user.
@@ -163,6 +162,6 @@ What it does:
 
 What it does not fake:
 
-- the live `10-attempt` recorder drill for `Record` and `Stop`
+- the live `10-attempt` recorder drill for `Record / Stop`
 
 That part still needs a real Descript session with Accessibility granted, because reliability is the actual product bar. The latest release check reads the newest drill report and only turns the Screen Recorder gate green when the live cycle passes.

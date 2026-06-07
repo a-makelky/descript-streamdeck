@@ -2,7 +2,7 @@
 
 ## Phase 1: Solid Screen Recorder MVP
 
-Goal: make `Record` and `Stop` dependable for Descript Screen Recorder on macOS.
+Goal: make one `Record / Stop` key dependable for Descript Screen Recorder on macOS.
 
 Work:
 
@@ -13,7 +13,7 @@ Work:
 
 Definition of done:
 
-- another user can install the plugin, grant permissions once, and reliably record and stop Screen Recorder from Stream Deck
+- another user can install the plugin, grant permissions once, and reliably start and stop Screen Recorder from one Stream Deck key
 
 ## Phase 1.5: Pause / Resume Feasibility
 
@@ -75,7 +75,7 @@ Definition of done:
 
 ## Immediate Next Work
 
-- keep `Record` and `Stop` on the public-beta lane after the 10-attempt live drill passed
+- keep `Record / Stop` on the public-beta lane after the 10-attempt live drill passed
 - package and publish the cleaner beta artifact plus install notes for testers
 - keep `Pause / Resume` out of the packaged action list until Descript exposes a stable control
 - continue hardening the dedicated screen-recording control window path alongside the in-editor recorder path

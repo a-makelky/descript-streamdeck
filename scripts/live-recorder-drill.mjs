@@ -173,7 +173,7 @@ async function main() {
   try {
     for (let index = 1; index <= attempts; index += 1) {
       report.attempts.push(await runRecordStopAttempt(index));
-      await sleep(500);
+      await sleep(2_000);
     }
   } catch (error) {
     report.error = String(error);

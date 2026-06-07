@@ -13,24 +13,26 @@ function isControllableState(state: RecorderState): boolean {
   return state === "recording" || state === "paused";
 }
 
-export function presentRecord(status: HelperStatus): KeyPresentation {
+export function presentRecordStop(status: HelperStatus): KeyPresentation {
   if (!status.descript.isRunning) {
-    return { title: compactTitle("Open", "Descript") };
+    return { title: compactTitle("Open", "Descript"), state: 0 };
   }
 
   if (!status.permissions.accessibilityTrusted && !status.supportedActions.record) {
-    return { title: compactTitle("Allow", "Access") };
+    return { title: compactTitle("Allow", "Access"), state: 0 };
   }
 
   switch (status.recorderState) {
     case "recording":
-      return { title: compactTitle("Live", "Recording") };
+      return { title: "Stop", state: 1 };
     case "paused":
-      return { title: compactTitle("Ready", "Resume") };
+      return { title: "Stop", state: 1 };
     default:
-      return { title: "Record" };
+      return { title: "Record", state: 0 };
   }
 }
+
+export const presentRecord = presentRecordStop;
 
 export function presentPauseResume(status: HelperStatus): KeyPresentation {
   if (!status.descript.isRunning) {
@@ -58,18 +60,5 @@ export function presentPauseResume(status: HelperStatus): KeyPresentation {
 }
 
 export function presentStop(status: HelperStatus): KeyPresentation {
-  if (!status.descript.isRunning) {
-    return { title: compactTitle("No", "App") };
-  }
-
-  if (!status.permissions.accessibilityTrusted) {
-    return { title: compactTitle("Allow", "Access") };
-  }
-
-  if (status.recorderState === "recording" || status.recorderState === "paused") {
-    return { title: "Stop" };
-  }
-
-  return { title: compactTitle("No", "Session") };
+  return presentRecordStop(status);
 }
-

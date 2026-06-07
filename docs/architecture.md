@@ -92,7 +92,7 @@ That lets the plugin present honest button states instead of blindly firing acti
 Current strongest path:
 
 - use Accessibility to inspect the Screen Recorder dock
-- use the dock's stable primary control for `Record` and `Stop`
+- use the dock's stable primary control for `Record / Stop`
 
 This is the most durable near-term strategy because it only exposes the controls that have a verified, repeatable target in the current Descript UI.
 

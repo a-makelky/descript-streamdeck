@@ -99,7 +99,7 @@ final class DescriptController {
                 )
                 let afterStatus = waitForStatus(
                     options: options,
-                    timeout: started ? 2.5 : 1.0
+                    timeout: started ? 12.0 : 1.0
                 )
                 let afterSnapshots = snapshots(
                     for: app,
@@ -899,7 +899,6 @@ final class DescriptController {
     private let recorderSignalRoles: Set<String> = [
         "AXButton",
         "AXCheckBox",
-        "AXGroup",
         "AXMenuButton",
         "AXPopUpButton"
     ]

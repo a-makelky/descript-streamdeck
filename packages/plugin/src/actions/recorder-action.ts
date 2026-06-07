@@ -44,6 +44,10 @@ export abstract class RecorderAction extends SingletonAction<ActionSettings> {
   protected abstract readonly commandName: CommandName;
   protected abstract present(status: HelperStatus): KeyPresentation;
 
+  protected commandForStatus(_status: HelperStatus): CommandName {
+    return this.commandName;
+  }
+
   override async onDidReceiveSettings(
     ev: DidReceiveSettingsEvent<ActionSettings>
   ): Promise<void> {
@@ -63,9 +67,11 @@ export abstract class RecorderAction extends SingletonAction<ActionSettings> {
     const settings = mergeSettings(ev.payload.settings);
 
     try {
-      const result = await helperProcess.runCommand(this.commandName, settings);
+      const beforeStatus = await helperProcess.getStatus(settings);
+      const command = this.commandForStatus(beforeStatus);
+      const result = await helperProcess.runCommand(command, settings);
       let debugSnapshot: unknown;
-      if (!result.ok || this.commandName !== "record") {
+      if (!result.ok || command !== "record") {
         try {
           debugSnapshot = await helperProcess.debugSnapshot();
         } catch (debugError) {
@@ -77,16 +83,21 @@ export abstract class RecorderAction extends SingletonAction<ActionSettings> {
 
       writeRuntimeEvent({
         actionId: ev.action.id,
-        command: this.commandName,
+        command,
         settings,
+        beforeStatus,
         result,
         debugSnapshot
       });
 
       const detail = result.message ? ` ${result.message}` : "";
-      ev.action.setTitle(this.present(result.status).title).catch(() => {});
+      const presentation = this.present(result.status);
+      ev.action.setTitle(presentation.title).catch(() => {});
+      if (presentation.state !== undefined) {
+        ev.action.setState(presentation.state).catch(() => {});
+      }
       streamDeck.logger.info(
-        `[descript-streamdeck] ${this.commandName} -> ${result.ok ? "ok" : "failed"}:${detail}`
+        `[descript-streamdeck] ${command} -> ${result.ok ? "ok" : "failed"}:${detail}`
       );
       if (result.ok) {
         await ev.action.showOk();
