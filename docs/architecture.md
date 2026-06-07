@@ -65,10 +65,13 @@ The helper currently exposes:
 - `record`
 - `pauseResume`
 - `stop`
+- `cutNote`
 - `openPermissions`
 - `debugSnapshot`
 
 This is small on purpose. It is easier to keep a narrow control surface stable than to expose a wide helper API we do not need yet.
+
+`cutNote` is dev-only for now. It saves a local timestamped note instead of editing the Descript project.
 
 ## Status Model
 

@@ -40,7 +40,10 @@ export class HelperProcess {
   }
 
   async runCommand(
-    type: Extract<BridgeCommandType, "record" | "pauseResume" | "stop">,
+    type: Extract<
+      BridgeCommandType,
+      "record" | "pauseResume" | "stop" | "cutNote"
+    >,
     settings?: Partial<ActionSettings>
   ): Promise<CommandResultPayload> {
     const response = await this.request(type, mergeSettings(settings));
@@ -123,6 +126,8 @@ export class HelperProcess {
       case "stop":
       case "pauseResume":
         return 10_000;
+      case "cutNote":
+        return 5_000;
       case "getStatus":
       case "debugSnapshot":
         return 12_000;

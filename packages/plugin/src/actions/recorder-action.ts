@@ -14,7 +14,7 @@ import { mergeSettings } from "@descript-streamdeck/shared";
 import { helperProcess } from "../bridge/helper-process.js";
 import type { KeyPresentation } from "../state/presentation.js";
 
-type CommandName = "record" | "pauseResume" | "stop";
+type CommandName = "record" | "pauseResume" | "stop" | "cutNote";
 
 type VisibleContext = {
   action: KeyAction<ActionSettings>;
@@ -52,6 +52,13 @@ export abstract class RecorderAction extends SingletonAction<ActionSettings> {
 
   protected commandForStatusError(_error: unknown): CommandName {
     return this.commandName;
+  }
+
+  protected fallbackPresentation(): KeyPresentation {
+    return {
+      title: "Record",
+      state: 0
+    };
   }
 
   override async onDidReceiveSettings(
@@ -179,10 +186,7 @@ export abstract class RecorderAction extends SingletonAction<ActionSettings> {
       streamDeck.logger.warn(
         `[descript-streamdeck] render ${this.commandName} -> skipped status refresh: ${String(error)}`
       );
-      const fallback = this.lastPresentations.get(action.id) ?? {
-        title: "Record",
-        state: 0
-      };
+      const fallback = this.lastPresentations.get(action.id) ?? this.fallbackPresentation();
       await action.setTitle(fallback.title);
       if (fallback.state !== undefined) {
         await action.setState(fallback.state);

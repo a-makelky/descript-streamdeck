@@ -4,7 +4,8 @@
     bringDescriptToFront: true,
     allowHotkeyFallback: true,
     openPermissionsIfNeeded: true,
-    screenRecorderShortcut: "cmd+shift+2"
+    screenRecorderShortcut: "cmd+shift+2",
+    cutNoteText: "CUT"
   };
 
   const form = document.getElementById("settings-form");
@@ -34,7 +35,8 @@
       bringDescriptToFront: form.elements.namedItem("bringDescriptToFront").checked,
       allowHotkeyFallback: form.elements.namedItem("allowHotkeyFallback").checked,
       openPermissionsIfNeeded: form.elements.namedItem("openPermissionsIfNeeded").checked,
-      screenRecorderShortcut: form.elements.namedItem("screenRecorderShortcut").value.trim() || defaults.screenRecorderShortcut
+      screenRecorderShortcut: form.elements.namedItem("screenRecorderShortcut").value.trim() || defaults.screenRecorderShortcut,
+      cutNoteText: form.elements.namedItem("cutNoteText").value.trim() || defaults.cutNoteText
     };
   }
 
@@ -96,4 +98,3 @@
     void inInfo;
   };
 })();
-

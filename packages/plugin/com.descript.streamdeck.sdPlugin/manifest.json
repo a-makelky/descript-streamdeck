@@ -31,14 +31,86 @@
       "UUID": "com.descript.streamdeck.stop",
       "Name": "Record / Stop",
       "Tooltip": "Start or stop Descript Screen Recorder.",
-      "Icon": "assets/actions/record",
+      "Icon": "assets/actions/record-stop",
       "States": [
         {
-          "Image": "assets/keys/record",
+          "Image": "assets/keys/record-stop-record",
           "TitleAlignment": "middle"
         },
         {
-          "Image": "assets/keys/stop",
+          "Image": "assets/keys/record-stop-stop",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "PropertyInspectorPath": "ui/settings.html",
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true
+    },
+    {
+      "UUID": "com.descript.streamdeck.record",
+      "Name": "Start Recording",
+      "Tooltip": "Start Descript Screen Recorder.",
+      "Icon": "assets/actions/start",
+      "States": [
+        {
+          "Image": "assets/keys/start",
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "assets/keys/live",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "PropertyInspectorPath": "ui/settings.html",
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true
+    },
+    {
+      "UUID": "com.descript.streamdeck.end",
+      "Name": "End Recording",
+      "Tooltip": "End the active Descript recording.",
+      "Icon": "assets/actions/end",
+      "States": [
+        {
+          "Image": "assets/keys/end-idle",
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "assets/keys/end",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "PropertyInspectorPath": "ui/settings.html",
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true
+    },
+    {
+      "UUID": "com.descript.streamdeck.pauseResume",
+      "Name": "Pause / Resume",
+      "Tooltip": "Pause or resume the active Descript recording.",
+      "Icon": "assets/actions/pause-resume",
+      "States": [
+        {
+          "Image": "assets/keys/pause",
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "assets/keys/resume",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "PropertyInspectorPath": "ui/settings.html",
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true
+    },
+    {
+      "UUID": "com.descript.streamdeck.cutNote",
+      "Name": "Cut Note",
+      "Tooltip": "Save a local timestamped cut note for the active recording.",
+      "Icon": "assets/actions/cut-note",
+      "States": [
+        {
+          "Image": "assets/keys/cut-note",
           "TitleAlignment": "middle"
         }
       ],

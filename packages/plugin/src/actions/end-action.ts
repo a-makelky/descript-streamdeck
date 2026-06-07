@@ -1,25 +1,29 @@
 import { action } from "@elgato/streamdeck";
 import type { HelperStatus } from "@descript-streamdeck/shared";
-import { presentStart } from "../state/presentation.js";
+import { presentEnd } from "../state/presentation.js";
 import { RecorderAction } from "./recorder-action.js";
 
-@action({ UUID: "com.descript.streamdeck.record" })
-export class RecordAction extends RecorderAction {
-  protected readonly commandName = "record" as const;
+@action({ UUID: "com.descript.streamdeck.end" })
+export class EndAction extends RecorderAction {
+  protected readonly commandName = "stop" as const;
 
   protected override commandForStatus(status: HelperStatus) {
     void status;
-    return "record" as const;
+    return "stop" as const;
+  }
+
+  protected override commandForStatusError() {
+    return "stop" as const;
   }
 
   protected override fallbackPresentation() {
     return {
-      title: "Start",
+      title: "End",
       state: 0 as const
     };
   }
 
   protected present(status: HelperStatus) {
-    return presentStart(status);
+    return presentEnd(status);
   }
 }
