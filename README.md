@@ -54,7 +54,7 @@ Latest preflight work on June 7, 2026 used:
 - `Install and discoverability`: passed
 - `Permission handling`: passed
 - `Record / Stop`: passed 10/10 clips in manual clean-project testing
-- `Public package`: latest GitHub prerelease contains this build
+- `Public package`: installed from GitHub prerelease and verified locally
 
 ## Architecture
 
