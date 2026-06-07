@@ -7,10 +7,14 @@ import { RecorderAction } from "./recorder-action.js";
 export class StopAction extends RecorderAction {
   protected readonly commandName = "stop" as const;
 
-  protected commandForStatus(status: HelperStatus) {
+  protected override commandForStatus(status: HelperStatus) {
     return status.recorderState === "recording" || status.recorderState === "paused"
       ? "stop"
       : "record";
+  }
+
+  protected override commandForStatusError() {
+    return "record" as const;
   }
 
   protected present(status: HelperStatus) {

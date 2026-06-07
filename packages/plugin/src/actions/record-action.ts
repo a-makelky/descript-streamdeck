@@ -7,7 +7,7 @@ import { RecorderAction } from "./recorder-action.js";
 export class RecordAction extends RecorderAction {
   protected readonly commandName = "record" as const;
 
-  protected commandForStatus(status: HelperStatus) {
+  protected override commandForStatus(status: HelperStatus) {
     return status.recorderState === "recording" || status.recorderState === "paused"
       ? "stop"
       : "record";

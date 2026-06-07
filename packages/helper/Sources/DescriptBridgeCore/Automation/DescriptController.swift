@@ -99,7 +99,10 @@ final class DescriptController {
                 )
                 let afterStatus = waitForStatus(
                     options: options,
-                    timeout: started ? 12.0 : 1.0
+                    timeout: started ? 12.0 : 1.0,
+                    until: { status in
+                        status.recorderState == .recording || status.recorderState == .paused
+                    }
                 )
                 let afterSnapshots = snapshots(
                     for: app,
@@ -381,7 +384,13 @@ final class DescriptController {
             }
 
             pressed = true
-            afterStatus = waitForStatus(options: options, timeout: 1.25)
+            afterStatus = waitForStatus(
+                options: options,
+                timeout: 1.25,
+                until: { status in
+                    status.recorderState == .idle
+                }
+            )
             if afterStatus.recorderState == .idle {
                 break
             }
@@ -638,14 +647,22 @@ final class DescriptController {
     private func waitForStatus(
         options: CommandOptions,
         timeout: TimeInterval,
-        pollInterval: TimeInterval = 0.2
+        pollInterval: TimeInterval = 0.2,
+        until isReady: ((HelperStatus) -> Bool)? = nil
     ) -> HelperStatus {
         let deadline = Date().addingTimeInterval(timeout)
         var latest = currentStatus(options: options)
 
+        if isReady?(latest) == true {
+            return latest
+        }
+
         while Date() < deadline {
             Thread.sleep(forTimeInterval: pollInterval)
             latest = currentStatus(options: options)
+            if isReady?(latest) == true {
+                return latest
+            }
         }
 
         return latest

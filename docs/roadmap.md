@@ -75,8 +75,7 @@ Definition of done:
 
 ## Immediate Next Work
 
-- keep `Record / Stop` on the public-beta lane after the 10-attempt live drill passed
-- package and publish the cleaner beta artifact plus install notes for testers
+- watch for any remaining yellow `Unavailable` flashes after the timeout fix
 - keep `Pause / Resume` out of the packaged action list until Descript exposes a stable control
 - continue hardening the dedicated screen-recording control window path alongside the in-editor recorder path
 - repeat the 10-attempt drill before each shared build

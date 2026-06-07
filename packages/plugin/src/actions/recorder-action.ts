@@ -38,6 +38,8 @@ function writeRuntimeEvent(event: Record<string, unknown>): void {
 
 export abstract class RecorderAction extends SingletonAction<ActionSettings> {
   private readonly contexts = new Map<string, VisibleContext>();
+  private readonly lastPresentations = new Map<string, KeyPresentation>();
+  private readonly lastStatuses = new Map<string, HelperStatus>();
   private refreshTimer: NodeJS.Timeout | undefined;
   private refreshInFlight = false;
 
@@ -45,6 +47,10 @@ export abstract class RecorderAction extends SingletonAction<ActionSettings> {
   protected abstract present(status: HelperStatus): KeyPresentation;
 
   protected commandForStatus(_status: HelperStatus): CommandName {
+    return this.commandName;
+  }
+
+  protected commandForStatusError(_error: unknown): CommandName {
     return this.commandName;
   }
 
@@ -67,8 +73,10 @@ export abstract class RecorderAction extends SingletonAction<ActionSettings> {
     const settings = mergeSettings(ev.payload.settings);
 
     try {
-      const beforeStatus = await helperProcess.getStatus(settings);
-      const command = this.commandForStatus(beforeStatus);
+      const statusResult = await this.statusForAction(ev.action.id, settings);
+      const command = statusResult.status
+        ? this.commandForStatus(statusResult.status)
+        : this.commandForStatusError(statusResult.error);
       const result = await helperProcess.runCommand(command, settings);
       let debugSnapshot: unknown;
       if (!result.ok || command !== "record") {
@@ -85,13 +93,16 @@ export abstract class RecorderAction extends SingletonAction<ActionSettings> {
         actionId: ev.action.id,
         command,
         settings,
-        beforeStatus,
+        beforeStatus: statusResult.status ?? null,
+        statusError: statusResult.error ? String(statusResult.error) : undefined,
         result,
         debugSnapshot
       });
 
       const detail = result.message ? ` ${result.message}` : "";
       const presentation = this.present(result.status);
+      this.lastStatuses.set(ev.action.id, result.status);
+      this.lastPresentations.set(ev.action.id, presentation);
       ev.action.setTitle(presentation.title).catch(() => {});
       if (presentation.state !== undefined) {
         ev.action.setState(presentation.state).catch(() => {});
@@ -140,6 +151,8 @@ export abstract class RecorderAction extends SingletonAction<ActionSettings> {
     ev: WillDisappearEvent<ActionSettings>
   ): Promise<void> {
     this.contexts.delete(ev.action.id);
+    this.lastPresentations.delete(ev.action.id);
+    this.lastStatuses.delete(ev.action.id);
     if (this.contexts.size === 0) {
       this.stopRefreshing();
     }
@@ -156,16 +169,48 @@ export abstract class RecorderAction extends SingletonAction<ActionSettings> {
     try {
       const status = await helperProcess.getStatus(settings);
       const presentation = this.present(status);
+      this.lastStatuses.set(action.id, status);
+      this.lastPresentations.set(action.id, presentation);
       await action.setTitle(presentation.title);
       if (presentation.state !== undefined) {
         await action.setState(presentation.state);
       }
     } catch (error) {
-      streamDeck.logger.error(
-        `[descript-streamdeck] render ${this.commandName} -> exception: ${String(error)}`
+      streamDeck.logger.warn(
+        `[descript-streamdeck] render ${this.commandName} -> skipped status refresh: ${String(error)}`
       );
-      await action.setTitle("Unavailable");
-      await action.showAlert();
+      const fallback = this.lastPresentations.get(action.id) ?? {
+        title: "Record",
+        state: 0
+      };
+      await action.setTitle(fallback.title);
+      if (fallback.state !== undefined) {
+        await action.setState(fallback.state);
+      }
+    }
+  }
+
+  private async statusForAction(
+    actionId: string,
+    settings: ActionSettings
+  ): Promise<{ error?: unknown; status?: HelperStatus }> {
+    try {
+      const status = await helperProcess.getStatus(settings);
+      this.lastStatuses.set(actionId, status);
+      return { status };
+    } catch (error) {
+      const cachedStatus = this.lastStatuses.get(actionId);
+      if (cachedStatus) {
+        streamDeck.logger.warn(
+          `[descript-streamdeck] using cached status after getStatus failed: ${String(error)}`
+        );
+        return { error, status: cachedStatus };
+      }
+
+      streamDeck.logger.warn(
+        `[descript-streamdeck] using fallback command after getStatus failed: ${String(error)}`
+      );
+      return { error };
     }
   }
 

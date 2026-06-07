@@ -28,6 +28,7 @@ export class HelperProcess {
   private buffer = "";
   private child: ChildProcessWithoutNullStreams | undefined;
   private readonly pending = new Map<string, PendingRequest>();
+  private requestQueue: Promise<void> = Promise.resolve();
 
   async getStatus(settings?: Partial<ActionSettings>): Promise<HelperStatus> {
     const response = await this.request("getStatus", mergeSettings(settings));
@@ -72,14 +73,32 @@ export class HelperProcess {
     type: BridgeCommandType,
     payload?: CommandOptions
   ): Promise<BridgeResponse> {
+    const queuedRequest = this.requestQueue.then(
+      () => this.sendRequest(type, payload),
+      () => this.sendRequest(type, payload)
+    );
+    this.requestQueue = queuedRequest.then(
+      () => undefined,
+      () => undefined
+    );
+    return queuedRequest;
+  }
+
+  private async sendRequest(
+    type: BridgeCommandType,
+    payload?: CommandOptions
+  ): Promise<BridgeResponse> {
     const child = this.ensureChild();
     const id = randomUUID();
+    const timeoutMs = this.timeoutFor(type);
 
     return new Promise<BridgeResponse>((resolvePromise, rejectPromise) => {
       const timeout = setTimeout(() => {
         this.pending.delete(id);
-        rejectPromise(new Error(`Helper timed out while handling ${type}.`));
-      }, 5_000);
+        rejectPromise(
+          new Error(`Helper timed out while handling ${type} after ${timeoutMs}ms.`)
+        );
+      }, timeoutMs);
 
       this.pending.set(id, {
         reject: rejectPromise,
@@ -95,6 +114,23 @@ export class HelperProcess {
 
       child.stdin.write(`${JSON.stringify(request)}\n`);
     });
+  }
+
+  private timeoutFor(type: BridgeCommandType): number {
+    switch (type) {
+      case "record":
+        return 18_000;
+      case "stop":
+      case "pauseResume":
+        return 10_000;
+      case "getStatus":
+      case "debugSnapshot":
+        return 12_000;
+      case "openPermissions":
+        return 8_000;
+      default:
+        return 5_000;
+    }
   }
 
   private ensureChild(): ChildProcessWithoutNullStreams {

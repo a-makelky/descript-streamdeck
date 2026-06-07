@@ -13,12 +13,12 @@ Working in the local beta:
 - `Record / Stop` is the supported action.
 - One key starts Screen Recorder when idle and stops it when recording.
 - The key shows `Record` when idle and `Stop` when active.
-- Manual testing on June 7, 2026 confirmed repeated starts and stops, including when Descript was running in the background.
+- Manual testing on June 7, 2026 passed 10 straight Record / Stop clips, including starts and stops while Descript was not focused.
+- The yellow `Unavailable` status seen during that test was traced to slow background status checks and fixed in this build.
 - The plugin requires macOS Accessibility permission.
 
 Still being held back:
 
-- The existing GitHub prerelease is the first beta package. The refreshed package should wait until the next clean-project `10-attempt` drill passes.
 - `Pause / Resume` stays hidden because Descript 2.19.1 does not expose a stable pause/resume control in the current Screen Recorder dock.
 - `Editor Recorder` support is scaffolded, but it still needs a real UI capture pass across app states.
 
@@ -26,7 +26,7 @@ Still being held back:
 
 The intended user flow is simple:
 
-1. Install the `.streamDeckPlugin` package.
+1. Download and install the `.streamDeckPlugin` package from the latest GitHub prerelease.
 2. Open Stream Deck.
 3. Drag `Record / Stop` from the Descript category onto a key.
 4. Grant Accessibility permission to the helper if macOS asks.
@@ -34,7 +34,7 @@ The intended user flow is simple:
 
 If Descript is not running or permission is missing, the key should show a blocked state instead of pretending it worked.
 
-Until the GitHub release asset is refreshed, testers should use a package built from this branch.
+Latest public test project: [Short Audio Test: Aaron Makelky Streamdeck Plugin 2026.6.7](https://share.descript.com/view/mOF9esgJo3r).
 
 ## Tested baseline
 
@@ -53,8 +53,8 @@ Latest preflight work on June 7, 2026 used:
 - `Build and package`: passed
 - `Install and discoverability`: passed
 - `Permission handling`: passed
-- `Record / Stop`: fixed locally and manually retested
-- `Public package refresh`: waiting on one clean-project `10-attempt` drill
+- `Record / Stop`: passed 10/10 clips in manual clean-project testing
+- `Public package`: latest GitHub prerelease contains this build
 
 ## Architecture
 

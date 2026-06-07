@@ -237,9 +237,9 @@ Current call:
 - `Install gate`: go as of the June 7, 2026 preflight; Stream Deck launched the plugin and logged a successful connection
 - `Permission gate`: go
 - `Screen Recorder control`: `Record / Stop` key presentation is fixed locally
-- `Screen Recorder gate`: rerun the live `10-attempt` Record / Stop drill in a clean Descript project before refreshing the public beta package
+- `Screen Recorder gate`: go after the June 7, 2026 clean-project manual test passed 10 Record / Stop clips
 - `Editor Recorder gate`: definitely not release-ready yet
 
 In plain English:
 
-The beta key now matches the intended user experience: one button starts the Screen Recorder when idle and stops it when active. The latest repeat drill hit a Descript insertion-point error in the current project, so do not refresh the public beta artifact until a clean-project drill passes again.
+The beta key now matches the intended user experience: one button starts the Screen Recorder when idle and stops it when active. Aaron's clean-project test passed 10 clips, including starts and stops while Descript was not focused. The public proof project is https://share.descript.com/view/mOF9esgJo3r.
