@@ -351,6 +351,62 @@ final class AccessibilityInspector {
         return false
     }
 
+    func clickRecorderDockPrimaryButton(pid: pid_t) -> Bool {
+        let appElement = AXUIElementCreateApplication(pid)
+        guard let windows = copyAttribute(
+            appElement,
+            attribute: kAXWindowsAttribute as String
+        ) as? [AXUIElement] else {
+            return false
+        }
+
+        for window in windows {
+            let title = (copyAttribute(window, attribute: kAXTitleAttribute as String) as? String) ?? ""
+            guard normalize(title) == "descript recorder" else {
+                continue
+            }
+
+            var buttons: [FramedElement] = []
+            collectFramedElements(
+                from: window,
+                allowedRoles: [kAXButtonRole as String],
+                depth: 0,
+                into: &buttons
+            )
+
+            let unlabeledCandidates = buttons.filter { button in
+                let hasLabel = button.label.map { !normalize($0).isEmpty } ?? false
+                return !hasLabel
+                    && button.frame.width >= 24
+                    && button.frame.width <= 96
+                    && button.frame.height >= 24
+                    && button.frame.height <= 96
+            }
+
+            if let target = unlabeledCandidates.max(by: {
+                let leftArea = $0.frame.width * $0.frame.height
+                let rightArea = $1.frame.width * $1.frame.height
+                if leftArea == rightArea {
+                    return $0.frame.midY < $1.frame.midY
+                }
+                return leftArea < rightArea
+            }) {
+                return clickElement(target.element)
+            }
+
+            if let frame = frame(for: window) {
+                return postMouseClick(
+                    at: CGPoint(
+                        x: frame.midX,
+                        y: frame.minY + (frame.height * 0.72)
+                    )
+                )
+            }
+        }
+
+        return false
+    }
+
     func containsElement(
         matching labels: [String],
         roles: Set<String>,

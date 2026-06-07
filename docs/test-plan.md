@@ -14,11 +14,10 @@ Scope:
 
 - macOS desktop app only
 - Descript Screen Recorder only
-- `Pause / Resume`
+- `Record`
 - `Stop`
-- active recording session already open in Descript
 
-`Record` remains an experimental lane until the Descript start surface is reliable from a normal in-project editor state.
+`Pause / Resume` remains an experimental lane until Descript exposes a stable pause/resume control in the Screen Recorder dock.
 
 ### Stage 2: Full Recorder Release
 
@@ -83,7 +82,7 @@ Go:
 No-go:
 
 - plugin silently fails when permission is missing
-- user is left guessing why `Pause / Resume` or `Stop` do nothing
+- user is left guessing why `Record` or `Stop` do nothing
 - permission recovery requires developer-only steps
 
 ## Functional Gates
@@ -96,16 +95,16 @@ This is the first real `go / no-go` ship decision.
 
 Go:
 
-- `Pause / Resume` correctly toggles state in 10 consecutive attempts during an active session
+- `Record` starts the Screen Recorder in 10 consecutive attempts
 - `Stop` ends the active recording in 10 consecutive attempts
-- button title/state reflects `recording` and `paused` accurately enough to guide the user
+- button title/state reflects `idle` and `recording` accurately enough to guide the user
 - failures are obvious and recoverable
 - plugin clearly tells the user when no active recording session is available
 
 No-go:
 
-- `Pause / Resume` or `Stop` succeeds less than 9 out of 10 attempts
-- `Pause / Resume` or `Stop` require the user to click Descript first in an undocumented way
+- `Record` or `Stop` succeeds less than 9 out of 10 attempts
+- `Record` or `Stop` require the user to click Descript first in an undocumented way
 - key state is misleading often enough that a user would press the wrong control
 - helper buttons depend on labels that drift between windows without a fallback plan
 
@@ -172,7 +171,6 @@ Every release candidate should be tested across this matrix.
 - Descript running but idle
 - Screen Recorder visible, not recording
 - Screen Recorder actively recording
-- Screen Recorder paused
 - recording stopped and returned to idle
 - Descript relaunched while Stream Deck is open
 - Mac sleeps and wakes while plugin is loaded
@@ -193,21 +191,18 @@ For the next real validation pass, use this order:
 
 1. Run `npm run release:check` to generate the baseline evidence report.
 2. Install the packaged plugin in Stream Deck.
-3. Put `Pause / Resume` and `Stop` on visible keys.
+3. Put `Record` and `Stop` on visible keys.
 4. Test with Accessibility denied and confirm blocked-state messaging.
 5. Grant Accessibility to the helper.
 6. Run `npm run release:check -- --skip-build` again to confirm the permission lane turned green and to capture a fresh helper snapshot.
 7. Run the Screen Recorder 10-attempt cycle:
-   - open a live Descript recording session
-   - pause
-   - resume
+   - record
    - stop
-8. Capture helper `debug` snapshots for each recorder state.
+8. Capture helper `debug` snapshots for idle and active recorder states.
 9. Harden selectors based on those snapshots.
 10. Repeat the 10-attempt cycle.
-11. Keep `Record` in the experimental lane until it can start a recording from a normal Descript project window in 10 consecutive attempts.
-12. Only after Screen Recorder is stable, decide whether to re-expose `Record` in the packaged plugin.
-13. Only after that, repeat the process for Editor Recorder.
+11. Keep `Pause / Resume` in the experimental lane until Descript exposes a stable pause/resume control.
+12. Only after that, repeat the process for Editor Recorder.
 
 ## Automated Evidence
 
@@ -231,8 +226,8 @@ Interpretation:
 
 Important:
 
-- the automated release check does not replace the live 10-attempt drill
-- the Screen Recorder release gate should still stay red until the real button cycle succeeds repeatedly on a real recorder session
+- the automated release check does not fake the live 10-attempt drill
+- the Screen Recorder release gate should stay red until the latest real Record + Stop cycle succeeds repeatedly on a real recorder session
 
 ## Current Readiness
 
@@ -242,11 +237,10 @@ Current call:
 - `Packaging gate`: go
 - `Install gate`: go as of the June 7, 2026 preflight; Stream Deck launched the plugin and logged a successful connection
 - `Permission gate`: go
-- `Standard recorder controls`: first live Stream Deck hardware validation passed for both `Pause / Resume` and `Stop`
-- `Screen Recorder controls`: first live Stream Deck hardware validation passed for both `Pause / Resume` and `Stop`
-- `Screen Recorder gate`: improved, but still not release-ready until the `10-attempt` drill passes
+- `Screen Recorder controls`: live helper validation passed for both `Record` and `Stop`
+- `Screen Recorder gate`: go after the June 7, 2026 live `10-attempt` Record + Stop drill passed
 - `Editor Recorder gate`: definitely not release-ready yet
 
 In plain English:
 
-The core buttons are now working on the actual Stream Deck against both Descript recorder surfaces we have tested, which is the first real on-field proof across more than one formation. But we still should not promise broad reliability to Descript users until those same controls survive the full `10-attempt` repetition test.
+The beta buttons now match what Descript exposes reliably today. Record starts the Screen Recorder and Stop ends it, and that cycle has survived the full `10-attempt` repetition test.

@@ -8,7 +8,7 @@ The project is built around a simple rule: keep the Stream Deck side thin, and p
 
 This repo already ships a working first foundation:
 
-- A Stream Deck plugin with two supported actions: `Pause / Resume` and `Stop`
+- A Stream Deck plugin with two supported actions: `Record` and `Stop`
 - A bundled Swift helper binary that detects Descript, checks Accessibility permissions, inspects the Descript UI tree, and executes recorder commands
 - A shared JSON protocol between the plugin and helper
 - A property inspector with per-action settings for recorder preference, focus behavior, shortcut fallback, and permission handling
@@ -18,17 +18,17 @@ This repo already ships a working first foundation:
 
 This is the honest state of the project right now:
 
-- `Pause / Resume` and `Stop` are the strongest controls today. They now have live Stream Deck hardware validation against both the standard in-project recorder controls and the dedicated Descript screen-recording control surface when macOS Accessibility is granted.
-- `Record` is still experimental. The code path stays in the repo for further work, but it is not part of the current packaged public-beta action set because it is not yet reliable from a normal in-project editor window.
-- `Pause / Resume` and `Stop` require macOS Accessibility permission because they rely on UI inspection and button presses inside Descript.
+- `Record` and `Stop` are the supported public-beta controls today. They passed a live 10-attempt Record + Stop drill against Descript Screen Recorder when macOS Accessibility is granted.
+- `Pause / Resume` stays in the codebase as an experimental lane, but it is not part of the current packaged action set because Descript 2.19.1 does not expose a stable pause/resume control in the current Screen Recorder dock.
+- `Record` and `Stop` require macOS Accessibility permission because they rely on UI inspection and button presses inside Descript.
 - `Editor Recorder` support is scaffolded and partially implemented through UI-button discovery, but it still needs a real UI capture pass to make it release-grade across app states.
 - The helper includes a `debug` command so we can inspect Descript window/button snapshots and harden selectors instead of guessing.
 
 Current practical release call:
 
-- `Pause / Resume`: go for continued beta validation
-- `Stop`: go for continued beta validation
-- overall public release: not yet, until the `10-attempt` reliability drill passes
+- `Record`: go for public beta
+- `Stop`: go for public beta
+- overall public beta: go
 
 ## Tested Baseline
 
@@ -47,7 +47,7 @@ Latest automated preflight, captured June 7, 2026:
 - `Build And Package`: go
 - `Install And Discoverability`: go
 - `Permission Handling`: go
-- `Screen Recorder Release Gate`: partial until the live `10-attempt` Pause / Resume and Stop drill passes
+- `Screen Recorder Release Gate`: go after the live `10-attempt` Record + Stop drill passed
 
 ## Architecture
 
@@ -105,8 +105,8 @@ Then restart Stream Deck or use the plugin reload flow in the app.
 
 There are two permission realities on macOS:
 
-- `Pause / Resume` and `Stop` need Accessibility so the helper can find and press Descript UI controls.
-- `Record` may work in some Descript states through shortcut or UI paths, but it is not a release-grade promise yet and is not exposed as a packaged Stream Deck action today.
+- `Record` and `Stop` need Accessibility so the helper can find and press Descript UI controls.
+- `Pause / Resume` is not exposed in the packaged beta until Descript exposes a stable pause/resume control again.
 
 If the helper is blocked, the plugin can open the Accessibility settings pane for the user.
 
@@ -163,6 +163,6 @@ What it does:
 
 What it does not fake:
 
-- the live `10-attempt` recorder drill for `Pause / Resume` and `Stop`
+- the live `10-attempt` recorder drill for `Record` and `Stop`
 
-That part still needs a real Descript session with Accessibility granted, because reliability is the actual product bar. `Record` stays experimental until it can start from a normal Descript project state consistently enough to deserve inclusion in that bar.
+That part still needs a real Descript session with Accessibility granted, because reliability is the actual product bar. The latest release check reads the newest drill report and only turns the Screen Recorder gate green when the live cycle passes.

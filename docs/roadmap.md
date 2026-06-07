@@ -2,32 +2,32 @@
 
 ## Phase 1: Solid Screen Recorder MVP
 
-Goal: make `Pause / Resume` and `Stop` dependable for an active Descript Screen Recorder session on macOS.
+Goal: make `Record` and `Stop` dependable for Descript Screen Recorder on macOS.
 
 Work:
 
 - grant Accessibility to the helper and capture real Descript button snapshots
-- tighten pause, resume, and stop selectors based on those snapshots
-- confirm button state refresh under idle, recording, and paused states
+- tighten record and stop selectors based on those snapshots
+- confirm button state refresh under idle and recording states
 - ship a first installable plugin artifact
 
 Definition of done:
 
-- another user can install the plugin, grant permissions once, and reliably pause, resume, and stop Screen Recorder from Stream Deck
+- another user can install the plugin, grant permissions once, and reliably record and stop Screen Recorder from Stream Deck
 
-## Phase 1.5: Reliable Start Recording
+## Phase 1.5: Pause / Resume Feasibility
 
-Goal: decide whether `Record` can graduate from experimental to supported.
+Goal: decide whether `Pause / Resume` can graduate from experimental to supported.
 
 Work:
 
-- find a stable way to launch recording from a normal Descript project window
-- verify whether the editor `Record` control, menu bar actions, or documented shortcut can do this reliably
-- require a 10-attempt pass before promoting `Record` into the release bar
+- find a stable pause/resume control in the current Descript Screen Recorder surface
+- capture UI snapshots for recording and paused states if Descript exposes them
+- require a 10-attempt pass before promoting `Pause / Resume` into the release bar
 
 Definition of done:
 
-- `Record` starts the intended recorder from a normal Descript session without timing luck or developer-only setup
+- `Pause / Resume` toggles the intended recorder without timing luck or developer-only setup
 
 ## Phase 2: Harden Editor Recorder
 
@@ -75,10 +75,8 @@ Definition of done:
 
 ## Immediate Next Work
 
-- keep `Pause / Resume` and `Stop` on the public-beta lane now that they have first live Stream Deck validation
-- keep hardening the dedicated screen-recording control window path alongside the in-editor recorder path
-- keep `Record` out of the packaged action list until it clears the reliability gate
-- run the 10-attempt drill for active-session controls inside the packaged `.sdPlugin`
-- package and publish a cleaner beta artifact plus install notes for testers
-- continue isolating a stable `Record` launch path from the normal editor state
-- decide whether `Record` should stay experimental for the first community release
+- keep `Record` and `Stop` on the public-beta lane after the 10-attempt live drill passed
+- package and publish the cleaner beta artifact plus install notes for testers
+- keep `Pause / Resume` out of the packaged action list until Descript exposes a stable control
+- continue hardening the dedicated screen-recording control window path alongside the in-editor recorder path
+- repeat the 10-attempt drill before each shared build

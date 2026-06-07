@@ -54,7 +54,7 @@ Owns:
 - shortcut synthesis for Screen Recorder
 - Accessibility trust detection
 - window/button inspection
-- UI button presses for pause, resume, and stop
+- UI button presses for record and stop, with pause/resume kept as an experimental helper command
 
 ## Command Surface
 
@@ -91,10 +91,10 @@ That lets the plugin present honest button states instead of blindly firing acti
 
 Current strongest path:
 
-- use the documented Descript shortcut for starting Screen Recorder
-- use Accessibility for `Pause / Resume` and `Stop`
+- use Accessibility to inspect the Screen Recorder dock
+- use the dock's stable primary control for `Record` and `Stop`
 
-This is the most durable near-term strategy because it leans on one published shortcut and uses UI inspection only where Descript does not expose a documented shortcut.
+This is the most durable near-term strategy because it only exposes the controls that have a verified, repeatable target in the current Descript UI.
 
 ### Editor Recorder
 
@@ -123,4 +123,3 @@ The durability strategy is simple:
 - keep selectors centralized in the helper
 - capture real UI snapshots when Descript changes
 - never spread recorder heuristics across multiple places in the codebase
-

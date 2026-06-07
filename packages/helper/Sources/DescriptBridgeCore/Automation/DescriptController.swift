@@ -38,6 +38,8 @@ final class DescriptController {
         let canRecord = permissions.accessibilityTrusted || options.allowHotkeyFallback
         let canControlSession = permissions.accessibilityTrusted
             && (inferredState == .recording || inferredState == .paused)
+        let canPauseResume = canControlSession
+            && pauseResumeControlIsVisible(in: snapshots)
 
         return HelperStatus(
             descript: DescriptAppInfo(
@@ -51,7 +53,7 @@ final class DescriptController {
             recorderState: inferredState,
             supportedActions: SupportedActions(
                 record: canRecord,
-                pauseResume: canControlSession,
+                pauseResume: canPauseResume,
                 stop: canControlSession
             ),
             detail: detailMessage(
@@ -349,6 +351,11 @@ final class DescriptController {
                 )
             },
             {
+                self.inspector.clickRecorderDockPrimaryButton(
+                    pid: app.processIdentifier
+                )
+            },
+            {
                 self.inspector.clickRecorderTimerButton(
                     pid: app.processIdentifier
                 )
@@ -503,7 +510,26 @@ final class DescriptController {
         }
 
         if screenRecorderControlsAreVisible(pid: pid) {
+            let startLabels = ["Record into script", "Start recording", "Start Recording"]
             if inspector.clickFirstButton(
+                matching: startLabels,
+                pid: pid,
+                method: .click
+            ) || inspector.clickFirstButton(
+                matching: startLabels,
+                pid: pid,
+                method: .press
+            ) || inspector.clickFirstControl(
+                matching: startLabels,
+                pid: pid,
+                method: .click,
+                preference: .deepest
+            ) || inspector.clickRecorderDockPrimaryButton(
+                pid: pid
+            ) {
+                progressed = true
+                Thread.sleep(forTimeInterval: 0.75)
+            } else if inspector.clickFirstButton(
                 matching: ["1"],
                 pid: pid,
                 method: .click
@@ -661,6 +687,10 @@ final class DescriptController {
 
         let signalLabels = controlLabels + buttonNames
 
+        if screenRecorderDockIsWaitingToStart(in: prioritizedSnapshots) {
+            return .idle
+        }
+
         if signalLabels.contains(where: { $0 == "resume" || $0.contains("resume recording") }) {
             return .paused
         }
@@ -674,7 +704,77 @@ final class DescriptController {
             return .recording
         }
 
+        if screenRecorderDockAppearsLive(in: prioritizedSnapshots) {
+            return .recording
+        }
+
         return .idle
+    }
+
+    private func pauseResumeControlIsVisible(
+        in snapshots: [AccessibilityWindowSnapshot]
+    ) -> Bool {
+        controlSignalLabels(from: snapshots).contains(where: {
+            $0 == "pause"
+                || $0 == "resume"
+                || $0.contains("pause recording")
+                || $0.contains("resume recording")
+        })
+    }
+
+    private func screenRecorderDockIsWaitingToStart(
+        in snapshots: [AccessibilityWindowSnapshot]
+    ) -> Bool {
+        let dockLabels = screenRecorderDockLabels(in: snapshots)
+        return dockLabels.contains(where: { $0.contains("press space to start") })
+    }
+
+    private func screenRecorderDockAppearsLive(
+        in snapshots: [AccessibilityWindowSnapshot]
+    ) -> Bool {
+        let dockSnapshots = snapshots.filter {
+            normalize($0.title) == "descript recorder"
+        }
+
+        guard !dockSnapshots.isEmpty else {
+            return false
+        }
+
+        let dockLabels = screenRecorderDockLabels(in: dockSnapshots)
+        let hasRecorderDevice = dockLabels.contains(where: {
+            $0.contains("screen")
+                || $0.contains("camera")
+                || $0.contains("insta360")
+        })
+
+        return hasRecorderDevice && !screenRecorderDockIsWaitingToStart(in: dockSnapshots)
+    }
+
+    private func screenRecorderDockLabels(
+        in snapshots: [AccessibilityWindowSnapshot]
+    ) -> [String] {
+        snapshots
+            .filter { normalize($0.title) == "descript recorder" }
+            .flatMap { snapshot in
+                snapshot.buttons + snapshot.elements.map(\.label)
+            }
+            .map(normalize)
+    }
+
+    private func controlSignalLabels(
+        from snapshots: [AccessibilityWindowSnapshot]
+    ) -> [String] {
+        let elementLabels = snapshots
+            .flatMap(\.elements)
+            .filter { recorderSignalRoles.contains($0.role) }
+            .map(\.label)
+            .map(normalize)
+
+        let buttonLabels = snapshots
+            .flatMap(\.buttons)
+            .map(normalize)
+
+        return elementLabels + buttonLabels
     }
 
     private func prioritizedStateSnapshots(

@@ -3,6 +3,7 @@ import {
   existsSync,
   lstatSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   realpathSync,
   writeFileSync
@@ -14,6 +15,7 @@ import { fileURLToPath } from "node:url";
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const distDir = join(rootDir, "dist");
 const artifactDir = join(rootDir, "artifacts", "release-check");
+const liveRecorderDrillDir = join(rootDir, "artifacts", "live-recorder-drill");
 const bundleDir = join(
   rootDir,
   "packages",
@@ -125,6 +127,26 @@ function buildBundleEvidence() {
   }));
 }
 
+function latestJsonReport(directory) {
+  if (!existsSync(directory)) {
+    return null;
+  }
+
+  const entries = readdirSync(directory)
+    .filter((entry) => entry.endsWith(".json"))
+    .sort();
+  const latest = entries.at(-1);
+  if (!latest) {
+    return null;
+  }
+
+  const path = join(directory, latest);
+  return {
+    path,
+    report: JSON.parse(readFileSync(path, "utf8"))
+  };
+}
+
 function gate(verdict, name, summary, detail) {
   return { verdict, name, summary, detail };
 }
@@ -189,7 +211,14 @@ const screenRecorderShortcutDisabled =
   typeof statusPayload?.detail === "string" &&
   statusPayload.detail.includes("Screen Recorder shortcut appears disabled");
 const recordShortcutBlocksPublicAction =
-  recordActionPublished && screenRecorderShortcutDisabled;
+  recordActionPublished && screenRecorderShortcutDisabled && !accessibilityTrusted;
+const liveRecorderDrill = latestJsonReport(liveRecorderDrillDir);
+const liveRecorderDrillGo =
+  liveRecorderDrill?.report?.summary?.verdict === "go";
+const liveRecorderDrillPassedCount =
+  liveRecorderDrill?.report?.summary?.passedCount ?? 0;
+const liveRecorderDrillAttempts =
+  liveRecorderDrill?.report?.summary?.attempts ?? 0;
 
 const gates = [
   gate(
@@ -222,8 +251,8 @@ const gates = [
     helperError
       ? "The helper could not produce a status report."
       : accessibilityTrusted
-        ? "Accessibility is granted, so pause/resume and stop can be validated."
-        : "Accessibility is still missing, so pause/resume and stop are blocked.",
+        ? "Accessibility is granted, so Record and Stop can be validated."
+        : "Accessibility is still missing, so Record and Stop are blocked.",
     helperError
       ? helperError
       : accessibilityTrusted
@@ -239,33 +268,35 @@ const gates = [
           ? "no-go"
         : !accessibilityTrusted
           ? "no-go"
-          : debugCapturedWindows > 0
-            ? "partial"
-            : "no-go",
+          : debugCapturedWindows > 0 && liveRecorderDrillGo
+            ? "go"
+            : debugCapturedWindows > 0
+              ? "partial"
+              : "no-go",
     "Screen Recorder Release Gate",
     helperError
       ? "No helper evidence is available."
       : !statusPayload?.descript?.isRunning
         ? "Descript is not running, so the recorder gate cannot be tested."
         : recordShortcutBlocksPublicAction
-          ? "Descript's local Screen Recorder shortcut is disabled, so the published Record action is blocked."
+          ? "Descript's local Screen Recorder shortcut is disabled and Accessibility is unavailable, so Record fallback is blocked."
         : !accessibilityTrusted
           ? "Accessibility is missing, so the recorder gate is blocked."
-        : debugCapturedWindows > 0
-            ? screenRecorderShortcutDisabled
-              ? "Pause / Resume and Stop are ready for the live drill; the hidden Record shortcut lane is still blocked."
-              : "Accessibility can see Descript, but the 10-attempt live cycle still needs to be completed."
+        : debugCapturedWindows > 0 && liveRecorderDrillGo
+          ? `Record and Stop passed the live reliability drill (${liveRecorderDrillPassedCount}/${liveRecorderDrillAttempts}).`
+          : debugCapturedWindows > 0
+            ? "Accessibility can see Descript, but the 10-attempt Record + Stop drill still needs to be completed."
             : "Accessibility is granted, but no Descript UI snapshot was captured.",
     helperError
       ? helperError
       : !accessibilityTrusted
         ? "Grant Accessibility to the helper, then rerun the release check and the live 10-attempt cycle."
         : recordShortcutBlocksPublicAction
-          ? "Restore or reassign Descript's Screen Recorder shortcut before trusting the published Record action."
+          ? "Grant Accessibility or restore Descript's Screen Recorder shortcut before trusting Record fallback."
         : debugCapturedWindows > 0
-          ? screenRecorderShortcutDisabled
-            ? "Record is not part of the current packaged beta action set, so this warning is tracked as experimental. Complete the live Pause / Resume and Stop drill before sharing broadly."
-            : "This lane is ready for the manual reliability drill: start, pause, resume, stop repeated 10 times."
+          ? liveRecorderDrillGo
+            ? `Latest drill report: ${liveRecorderDrill.path}`
+            : "Run npm run drill:recorder to repeat Record + Stop 10 times against a live Descript session."
           : "Open the target recorder in Descript and capture a real debug snapshot before trusting selectors."
   )
 ];
@@ -298,7 +329,8 @@ const report = {
     pluginLogPath,
     pluginLogTail,
     streamDeckLogPath,
-    streamDeckLogTail
+    streamDeckLogTail,
+    liveRecorderDrill
   }
 };
 

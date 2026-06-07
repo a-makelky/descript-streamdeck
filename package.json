@@ -14,6 +14,7 @@
     "build:shared": "npm --workspace @descript-streamdeck/shared run build",
     "check": "npm run typecheck",
     "clean": "rm -rf packages/plugin/com.descript.streamdeck.sdPlugin/dist packages/plugin/com.descript.streamdeck.sdPlugin/bin packages/shared/dist packages/helper/.build",
+    "drill:recorder": "node scripts/live-recorder-drill.mjs",
     "package:plugin": "npm run build && node scripts/package-plugin.mjs",
     "release:check": "node scripts/release-check.mjs",
     "typecheck": "npm --workspaces --if-present run typecheck && swift build --package-path packages/helper"
