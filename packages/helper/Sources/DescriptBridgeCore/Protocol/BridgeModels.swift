@@ -23,19 +23,69 @@ public struct CommandOptions: Codable {
     public let allowHotkeyFallback: Bool
     public let openPermissionsIfNeeded: Bool
     public let screenRecorderShortcut: String
+    public let cutNoteText: String
 
     public init(
         preferredRecorder: RecorderKind = .auto,
         bringDescriptToFront: Bool = true,
         allowHotkeyFallback: Bool = true,
         openPermissionsIfNeeded: Bool = true,
-        screenRecorderShortcut: String = "cmd+shift+2"
+        screenRecorderShortcut: String = "cmd+shift+2",
+        cutNoteText: String = "CUT"
     ) {
         self.preferredRecorder = preferredRecorder
         self.bringDescriptToFront = bringDescriptToFront
         self.allowHotkeyFallback = allowHotkeyFallback
         self.openPermissionsIfNeeded = openPermissionsIfNeeded
         self.screenRecorderShortcut = screenRecorderShortcut
+        self.cutNoteText = cutNoteText
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case preferredRecorder
+        case bringDescriptToFront
+        case allowHotkeyFallback
+        case openPermissionsIfNeeded
+        case screenRecorderShortcut
+        case cutNoteText
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        preferredRecorder = try container.decodeIfPresent(
+            RecorderKind.self,
+            forKey: .preferredRecorder
+        ) ?? .auto
+        bringDescriptToFront = try container.decodeIfPresent(
+            Bool.self,
+            forKey: .bringDescriptToFront
+        ) ?? true
+        allowHotkeyFallback = try container.decodeIfPresent(
+            Bool.self,
+            forKey: .allowHotkeyFallback
+        ) ?? true
+        openPermissionsIfNeeded = try container.decodeIfPresent(
+            Bool.self,
+            forKey: .openPermissionsIfNeeded
+        ) ?? true
+        screenRecorderShortcut = try container.decodeIfPresent(
+            String.self,
+            forKey: .screenRecorderShortcut
+        ) ?? "cmd+shift+2"
+        cutNoteText = try container.decodeIfPresent(
+            String.self,
+            forKey: .cutNoteText
+        ) ?? "CUT"
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(preferredRecorder, forKey: .preferredRecorder)
+        try container.encode(bringDescriptToFront, forKey: .bringDescriptToFront)
+        try container.encode(allowHotkeyFallback, forKey: .allowHotkeyFallback)
+        try container.encode(openPermissionsIfNeeded, forKey: .openPermissionsIfNeeded)
+        try container.encode(screenRecorderShortcut, forKey: .screenRecorderShortcut)
+        try container.encode(cutNoteText, forKey: .cutNoteText)
     }
 }
 
@@ -71,6 +121,7 @@ public enum BridgeCommandType: String, Codable {
     case record
     case pauseResume
     case stop
+    case cutNote
     case openPermissions
     case debugSnapshot
 }

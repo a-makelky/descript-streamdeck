@@ -45,6 +45,78 @@
       "PropertyInspectorPath": "ui/settings.html",
       "SupportedInMultiActions": true,
       "UserTitleEnabled": true
+    },
+    {
+      "UUID": "com.descript.streamdeck.record",
+      "Name": "Start Recording",
+      "Tooltip": "Start Descript Screen Recorder.",
+      "Icon": "assets/actions/record",
+      "States": [
+        {
+          "Image": "assets/keys/record",
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "assets/keys/record",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "PropertyInspectorPath": "ui/settings.html",
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true
+    },
+    {
+      "UUID": "com.descript.streamdeck.end",
+      "Name": "End Recording",
+      "Tooltip": "End the active Descript recording.",
+      "Icon": "assets/actions/stop",
+      "States": [
+        {
+          "Image": "assets/keys/stop",
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "assets/keys/stop",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "PropertyInspectorPath": "ui/settings.html",
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true
+    },
+    {
+      "UUID": "com.descript.streamdeck.pauseResume",
+      "Name": "Pause / Resume",
+      "Tooltip": "Pause or resume the active Descript recording.",
+      "Icon": "assets/actions/pause",
+      "States": [
+        {
+          "Image": "assets/keys/pause",
+          "TitleAlignment": "middle"
+        },
+        {
+          "Image": "assets/keys/resume",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "PropertyInspectorPath": "ui/settings.html",
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true
+    },
+    {
+      "UUID": "com.descript.streamdeck.cutNote",
+      "Name": "Cut Note",
+      "Tooltip": "Save a local timestamped cut note for the active recording.",
+      "Icon": "assets/actions/cut-note",
+      "States": [
+        {
+          "Image": "assets/keys/cut-note",
+          "TitleAlignment": "middle"
+        }
+      ],
+      "PropertyInspectorPath": "ui/settings.html",
+      "SupportedInMultiActions": true,
+      "UserTitleEnabled": true
     }
   ]
 }

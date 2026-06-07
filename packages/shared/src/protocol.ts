@@ -14,6 +14,7 @@ export type BridgeCommandType =
   | "record"
   | "pauseResume"
   | "stop"
+  | "cutNote"
   | "openPermissions"
   | "debugSnapshot";
 
@@ -24,6 +25,7 @@ export type ActionSettings = {
   allowHotkeyFallback: boolean;
   openPermissionsIfNeeded: boolean;
   screenRecorderShortcut: string;
+  cutNoteText: string;
 };
 
 export const defaultActionSettings: ActionSettings = {
@@ -31,7 +33,8 @@ export const defaultActionSettings: ActionSettings = {
   bringDescriptToFront: true,
   allowHotkeyFallback: true,
   openPermissionsIfNeeded: true,
-  screenRecorderShortcut: "cmd+shift+2"
+  screenRecorderShortcut: "cmd+shift+2",
+  cutNoteText: "CUT"
 };
 
 export type CommandOptions = ActionSettings;

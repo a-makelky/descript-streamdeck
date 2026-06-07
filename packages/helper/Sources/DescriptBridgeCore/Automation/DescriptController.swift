@@ -409,6 +409,43 @@ final class DescriptController {
         )
     }
 
+    func cutNote(options: CommandOptions) -> CommandOutcome {
+        let status = currentStatus(options: options)
+        let noteText = normalizedCutNoteText(options.cutNoteText)
+
+        var event: [String: Any] = [
+            "createdAt": ISO8601DateFormatter().string(from: Date()),
+            "source": "streamdeck",
+            "note": noteText,
+            "recorderState": status.recorderState.rawValue,
+            "descript": [
+                "bundleId": status.descript.bundleId,
+                "isRunning": status.descript.isRunning
+            ]
+        ]
+
+        if let version = status.descript.version {
+            event["descriptVersion"] = version
+        }
+
+        if let activeRecorder = status.activeRecorder {
+            event["activeRecorder"] = activeRecorder.rawValue
+        }
+
+        if let title = bestWindowTitleForCutNote() {
+            event["windowTitle"] = title
+        }
+
+        let saved = writeCutNoteEvent(event)
+        return CommandOutcome(
+            ok: saved,
+            message: saved
+                ? "Saved cut note: \(noteText)."
+                : "Could not save the cut note.",
+            status: status
+        )
+    }
+
     func openAccessibilitySettings() -> Bool {
         guard let url = URL(
             string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
@@ -458,6 +495,69 @@ final class DescriptController {
         trusted
             ? inspector.captureWindowSnapshots(pid: app.processIdentifier)
             : []
+    }
+
+    private func normalizedCutNoteText(_ value: String) -> String {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? "CUT" : trimmed
+    }
+
+    private func bestWindowTitleForCutNote() -> String? {
+        guard let app = runningApp(), inspector.isTrusted() else {
+            return nil
+        }
+
+        let titles = inspector.captureWindowSnapshots(pid: app.processIdentifier)
+            .map(\.title)
+            .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+        return titles.first(where: { normalize($0).contains("| descript") })
+            ?? titles.first(where: {
+                let title = normalize($0)
+                return title != "descript" && title != "descript recorder"
+            })
+            ?? titles.first
+    }
+
+    private func writeCutNoteEvent(_ event: [String: Any]) -> Bool {
+        do {
+            let logURL = cutNoteLogURL()
+            try FileManager.default.createDirectory(
+                at: logURL.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+
+            var data = try JSONSerialization.data(
+                withJSONObject: event,
+                options: [.sortedKeys]
+            )
+            data.append(0x0a)
+
+            if FileManager.default.fileExists(atPath: logURL.path) {
+                let handle = try FileHandle(forWritingTo: logURL)
+                defer {
+                    try? handle.close()
+                }
+                try handle.seekToEnd()
+                try handle.write(contentsOf: data)
+            } else {
+                try data.write(to: logURL)
+            }
+
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    private func cutNoteLogURL() -> URL {
+        let executableURL = URL(fileURLWithPath: CommandLine.arguments[0])
+            .standardizedFileURL
+        return executableURL
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("logs")
+            .appendingPathComponent("cut-notes.jsonl")
     }
 
     private func requireAccessibility(for options: CommandOptions) -> Bool {

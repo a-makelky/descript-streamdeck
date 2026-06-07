@@ -125,10 +125,18 @@ Sources:
 
 ### Phase A: Dev branch scaffolding
 
-- Keep `Record / Stop` unchanged.
-- Add separate manifest actions for `Start Recording`, `End Recording`, `Pause / Resume`, and `Cut Note`.
-- Add matching action classes in `packages/plugin/src/actions`.
-- Extend the shared protocol with a `cutNote` command only after the local note behavior is defined.
+- Keep `Record / Stop` unchanged. Done.
+- Add separate manifest actions for `Start Recording`, `End Recording`, `Pause / Resume`, and `Cut Note`. Done.
+- Add matching action classes in `packages/plugin/src/actions`. Done.
+- Extend the shared protocol with a `cutNote` command after the local note behavior is defined. Done.
+
+Current dev behavior:
+
+- `Start Recording` calls the existing `record` helper command and never stops an active session.
+- `End Recording` calls the existing `stop` helper command and never starts a new session.
+- `Pause / Resume` calls the existing experimental `pauseResume` helper command.
+- `Cut Note` writes a local JSONL entry to `logs/cut-notes.jsonl` inside the installed plugin bundle.
+- `Cut Note` does not edit Descript yet.
 
 ### Phase B: Capture proof
 

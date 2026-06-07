@@ -14,7 +14,7 @@ import { mergeSettings } from "@descript-streamdeck/shared";
 import { helperProcess } from "../bridge/helper-process.js";
 import type { KeyPresentation } from "../state/presentation.js";
 
-type CommandName = "record" | "pauseResume" | "stop";
+type CommandName = "record" | "pauseResume" | "stop" | "cutNote";
 
 type VisibleContext = {
   action: KeyAction<ActionSettings>;

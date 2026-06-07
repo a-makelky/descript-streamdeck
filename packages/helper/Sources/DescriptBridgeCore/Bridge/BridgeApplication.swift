@@ -72,6 +72,8 @@ public final class BridgeApplication {
             try printCLICommandResult(outcome: controller.pauseResume(options: CommandOptions()))
         case "stop":
             try printCLICommandResult(outcome: controller.stop(options: CommandOptions()))
+        case "cut-note":
+            try printCLICommandResult(outcome: controller.cutNote(options: CommandOptions()))
         case "open-permissions":
             let opened = controller.openAccessibilitySettings()
             try printCLI(
@@ -135,6 +137,11 @@ public final class BridgeApplication {
             try writeCommandResult(
                 id: request.id,
                 outcome: controller.stop(options: options)
+            )
+        case .cutNote:
+            try writeCommandResult(
+                id: request.id,
+                outcome: controller.cutNote(options: options)
             )
         case .openPermissions:
             let opened = controller.openAccessibilitySettings()

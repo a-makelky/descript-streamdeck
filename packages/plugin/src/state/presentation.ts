@@ -34,6 +34,38 @@ export function presentRecordStop(status: HelperStatus): KeyPresentation {
 
 export const presentRecord = presentRecordStop;
 
+export function presentStart(status: HelperStatus): KeyPresentation {
+  if (!status.descript.isRunning) {
+    return { title: compactTitle("Open", "Descript"), state: 0 };
+  }
+
+  if (!status.permissions.accessibilityTrusted && !status.supportedActions.record) {
+    return { title: compactTitle("Allow", "Access"), state: 0 };
+  }
+
+  if (isControllableState(status.recorderState)) {
+    return { title: "Live", state: 1 };
+  }
+
+  return { title: "Start", state: 0 };
+}
+
+export function presentEnd(status: HelperStatus): KeyPresentation {
+  if (!status.descript.isRunning) {
+    return { title: compactTitle("No", "App"), state: 0 };
+  }
+
+  if (!status.permissions.accessibilityTrusted) {
+    return { title: compactTitle("Allow", "Access"), state: 0 };
+  }
+
+  if (isControllableState(status.recorderState)) {
+    return { title: "End", state: 1 };
+  }
+
+  return { title: compactTitle("No", "Session"), state: 0 };
+}
+
 export function presentPauseResume(status: HelperStatus): KeyPresentation {
   if (!status.descript.isRunning) {
     return { title: compactTitle("No", "App"), state: 0 };
@@ -61,4 +93,8 @@ export function presentPauseResume(status: HelperStatus): KeyPresentation {
 
 export function presentStop(status: HelperStatus): KeyPresentation {
   return presentRecordStop(status);
+}
+
+export function presentCutNote(_status: HelperStatus): KeyPresentation {
+  return { title: compactTitle("Cut", "Note"), state: 0 };
 }
