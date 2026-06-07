@@ -29,6 +29,8 @@ Definition of done:
 
 - `Pause / Resume` toggles the intended recorder without timing luck or developer-only setup
 
+Expanded control planning for Start, End, Pause / Resume, and Cut Note lives in [expanded-controls-feasibility.md](expanded-controls-feasibility.md).
+
 ## Phase 2: Harden Editor Recorder
 
 Goal: support the Editor Recorder with the same three-button control model.
