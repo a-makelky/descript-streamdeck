@@ -20,6 +20,7 @@ const bundleDir = join(
   "plugin",
   "com.descript.streamdeck.sdPlugin"
 );
+const manifestPath = join(bundleDir, "manifest.json");
 const helperPath = join(bundleDir, "bin", "descript-bridge");
 const pluginLogPath = join(bundleDir, "logs", "com.descript.streamdeck.0.log");
 const packagedArtifactPath = join(distDir, "Descript-Recorder-0.1.0.streamDeckPlugin");
@@ -50,6 +51,13 @@ const requiredBundleFiles = [
 ];
 
 const skipBuild = process.argv.includes("--skip-build");
+const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+const publishedActionIds = Array.isArray(manifest.Actions)
+  ? manifest.Actions.map((action) => action.UUID).filter(Boolean)
+  : [];
+const recordActionPublished = publishedActionIds.includes(
+  "com.descript.streamdeck.record"
+);
 
 function runCommand(command, args) {
   const result = spawnSync(command, args, {
@@ -180,6 +188,8 @@ const debugCapturedWindows = debugPayload?.windows?.length ?? 0;
 const screenRecorderShortcutDisabled =
   typeof statusPayload?.detail === "string" &&
   statusPayload.detail.includes("Screen Recorder shortcut appears disabled");
+const recordShortcutBlocksPublicAction =
+  recordActionPublished && screenRecorderShortcutDisabled;
 
 const gates = [
   gate(
@@ -225,7 +235,7 @@ const gates = [
       ? "no-go"
       : !statusPayload?.descript?.isRunning
         ? "no-go"
-        : screenRecorderShortcutDisabled
+        : recordShortcutBlocksPublicAction
           ? "no-go"
         : !accessibilityTrusted
           ? "no-go"
@@ -237,21 +247,25 @@ const gates = [
       ? "No helper evidence is available."
       : !statusPayload?.descript?.isRunning
         ? "Descript is not running, so the recorder gate cannot be tested."
-        : screenRecorderShortcutDisabled
-          ? "Descript's local Screen Recorder shortcut is disabled, so the current record path is blocked."
+        : recordShortcutBlocksPublicAction
+          ? "Descript's local Screen Recorder shortcut is disabled, so the published Record action is blocked."
         : !accessibilityTrusted
           ? "Accessibility is missing, so the recorder gate is blocked."
-          : debugCapturedWindows > 0
-            ? "Accessibility can see Descript, but the 10-attempt live cycle still needs to be completed."
+        : debugCapturedWindows > 0
+            ? screenRecorderShortcutDisabled
+              ? "Pause / Resume and Stop are ready for the live drill; the hidden Record shortcut lane is still blocked."
+              : "Accessibility can see Descript, but the 10-attempt live cycle still needs to be completed."
             : "Accessibility is granted, but no Descript UI snapshot was captured.",
     helperError
       ? helperError
       : !accessibilityTrusted
         ? "Grant Accessibility to the helper, then rerun the release check and the live 10-attempt cycle."
-        : screenRecorderShortcutDisabled
-          ? "Restore or reassign Descript's Screen Recorder shortcut before trusting the Screen Recorder action."
+        : recordShortcutBlocksPublicAction
+          ? "Restore or reassign Descript's Screen Recorder shortcut before trusting the published Record action."
         : debugCapturedWindows > 0
-          ? "This lane is ready for the manual reliability drill: start, pause, resume, stop repeated 10 times."
+          ? screenRecorderShortcutDisabled
+            ? "Record is not part of the current packaged beta action set, so this warning is tracked as experimental. Complete the live Pause / Resume and Stop drill before sharing broadly."
+            : "This lane is ready for the manual reliability drill: start, pause, resume, stop repeated 10 times."
           : "Open the target recorder in Descript and capture a real debug snapshot before trusting selectors."
   )
 ];
@@ -269,6 +283,9 @@ const report = {
   evidence: {
     commands,
     bundleEvidence,
+    publishedActionIds,
+    recordActionPublished,
+    screenRecorderShortcutDisabled,
     packagedArtifactPath,
     packagedArtifactExists,
     helperStatus,

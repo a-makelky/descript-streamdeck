@@ -240,7 +240,7 @@ Current call:
 
 - `Build gate`: go
 - `Packaging gate`: go
-- `Install gate`: go
+- `Install gate`: go as of the June 7, 2026 preflight; Stream Deck launched the plugin and logged a successful connection
 - `Permission gate`: go
 - `Standard recorder controls`: first live Stream Deck hardware validation passed for both `Pause / Resume` and `Stop`
 - `Screen Recorder controls`: first live Stream Deck hardware validation passed for both `Pause / Resume` and `Stop`

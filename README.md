@@ -39,6 +39,16 @@ The initial build and validation in this repo were done against:
 - `Stream Deck 7.4.0`
 - `Stream Deck +`
 
+Latest automated preflight, captured June 7, 2026:
+
+- `macOS 26.5`
+- `Descript 2.19.1`
+- `Stream Deck 7.4.2`
+- `Build And Package`: go
+- `Install And Discoverability`: go
+- `Permission Handling`: go
+- `Screen Recorder Release Gate`: partial until the live `10-attempt` Pause / Resume and Stop drill passes
+
 ## Architecture
 
 High level:
