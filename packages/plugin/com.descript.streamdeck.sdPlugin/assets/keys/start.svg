@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 144">
+  <rect width="144" height="144" rx="28" fill="#0d1f16"/>
+  <circle cx="72" cy="55" r="34" fill="#22c55e"/>
+  <path d="M62 34 93 55 62 76Z" fill="#07120d"/>
+  <text x="72" y="118" fill="#f4f6fb" font-family="Arial, Helvetica, sans-serif" font-size="29" font-weight="800" text-anchor="middle">START</text>
+</svg>

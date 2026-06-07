@@ -1,6 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <rect width="128" height="128" rx="24" fill="#171b24"/>
-  <path d="M36 36h56v56H36z" fill="#f4f6fb"/>
-  <path d="M46 52h36M46 64h28M46 76h20" stroke="#171b24" stroke-width="8" stroke-linecap="round"/>
-  <circle cx="92" cy="36" r="14" fill="#f04e44"/>
+  <rect width="128" height="128" rx="24" fill="#0f1f24"/>
+  <path d="M34 28h52v62H34z" fill="#f4f6fb"/>
+  <path d="M45 48h30M45 60h24M45 72h18" stroke="#0f1f24" stroke-width="7" stroke-linecap="round"/>
+  <path d="M90 45 112 23M90 23l22 22" stroke="#67e8f9" stroke-width="8" stroke-linecap="round"/>
+  <text x="64" y="112" fill="#67e8f9" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="800" text-anchor="middle">CUT</text>
 </svg>

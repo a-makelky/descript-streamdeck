@@ -31,14 +31,14 @@
       "UUID": "com.descript.streamdeck.stop",
       "Name": "Record / Stop",
       "Tooltip": "Start or stop Descript Screen Recorder.",
-      "Icon": "assets/actions/record",
+      "Icon": "assets/actions/record-stop",
       "States": [
         {
-          "Image": "assets/keys/record",
+          "Image": "assets/keys/record-stop-record",
           "TitleAlignment": "middle"
         },
         {
-          "Image": "assets/keys/stop",
+          "Image": "assets/keys/record-stop-stop",
           "TitleAlignment": "middle"
         }
       ],
@@ -50,14 +50,14 @@
       "UUID": "com.descript.streamdeck.record",
       "Name": "Start Recording",
       "Tooltip": "Start Descript Screen Recorder.",
-      "Icon": "assets/actions/record",
+      "Icon": "assets/actions/start",
       "States": [
         {
-          "Image": "assets/keys/record",
+          "Image": "assets/keys/start",
           "TitleAlignment": "middle"
         },
         {
-          "Image": "assets/keys/record",
+          "Image": "assets/keys/live",
           "TitleAlignment": "middle"
         }
       ],
@@ -69,14 +69,14 @@
       "UUID": "com.descript.streamdeck.end",
       "Name": "End Recording",
       "Tooltip": "End the active Descript recording.",
-      "Icon": "assets/actions/stop",
+      "Icon": "assets/actions/end",
       "States": [
         {
-          "Image": "assets/keys/stop",
+          "Image": "assets/keys/end-idle",
           "TitleAlignment": "middle"
         },
         {
-          "Image": "assets/keys/stop",
+          "Image": "assets/keys/end",
           "TitleAlignment": "middle"
         }
       ],
@@ -88,7 +88,7 @@
       "UUID": "com.descript.streamdeck.pauseResume",
       "Name": "Pause / Resume",
       "Tooltip": "Pause or resume the active Descript recording.",
-      "Icon": "assets/actions/pause",
+      "Icon": "assets/actions/pause-resume",
       "States": [
         {
           "Image": "assets/keys/pause",

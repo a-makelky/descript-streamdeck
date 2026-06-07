@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="24" fill="#201a0a"/>
+  <rect x="27" y="28" width="14" height="48" rx="7" fill="#fbbf24"/>
+  <rect x="51" y="28" width="14" height="48" rx="7" fill="#fbbf24"/>
+  <path d="M79 28 107 52 79 76Z" fill="#22c55e"/>
+  <text x="64" y="106" fill="#f4f6fb" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" text-anchor="middle">PAUSE</text>
+</svg>
