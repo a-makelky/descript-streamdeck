@@ -12,6 +12,13 @@ export class RecordAction extends RecorderAction {
     return "record" as const;
   }
 
+  protected override fallbackPresentation() {
+    return {
+      title: "Start",
+      state: 0 as const
+    };
+  }
+
   protected present(status: HelperStatus) {
     return presentStart(status);
   }

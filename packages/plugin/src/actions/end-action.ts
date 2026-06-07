@@ -16,6 +16,13 @@ export class EndAction extends RecorderAction {
     return "stop" as const;
   }
 
+  protected override fallbackPresentation() {
+    return {
+      title: "End",
+      state: 0 as const
+    };
+  }
+
   protected present(status: HelperStatus) {
     return presentEnd(status);
   }

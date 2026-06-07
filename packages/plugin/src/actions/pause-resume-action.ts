@@ -7,6 +7,13 @@ import { RecorderAction } from "./recorder-action.js";
 export class PauseResumeAction extends RecorderAction {
   protected readonly commandName = "pauseResume" as const;
 
+  protected override fallbackPresentation() {
+    return {
+      title: "Pause",
+      state: 0 as const
+    };
+  }
+
   protected present(status: HelperStatus) {
     return presentPauseResume(status);
   }

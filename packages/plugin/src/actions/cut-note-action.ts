@@ -7,6 +7,13 @@ import { RecorderAction } from "./recorder-action.js";
 export class CutNoteAction extends RecorderAction {
   protected readonly commandName = "cutNote" as const;
 
+  protected override fallbackPresentation() {
+    return {
+      title: "Cut\nNote",
+      state: 0 as const
+    };
+  }
+
   protected present(status: HelperStatus) {
     return presentCutNote(status);
   }
